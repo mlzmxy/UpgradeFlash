@@ -27,11 +27,16 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    hexparsing.cpp
+    hexparsing.cpp \
+    canfunc.cpp \
+    upgradeproc.cpp
 
 HEADERS += \
         mainwindow.h \
-    hexparsing.h
+    hexparsing.h \
+    CAN_TO_USB.h \
+    canfunc.h \
+    upgradeproc.h
 
 FORMS += \
         mainwindow.ui
@@ -40,3 +45,8 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+#win32: LIBS += -L$$PWD/./ -lCAN_TO_USB
+
+#INCLUDEPATH += $$PWD/.
+#DEPENDPATH += $$PWD/.
