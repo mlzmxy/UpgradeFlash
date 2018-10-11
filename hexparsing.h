@@ -40,6 +40,8 @@ public:
 
 	vector<unsigned short int> GetDataMap();
 	string GetErrorMsg();
+    unsigned int GetAddrLength();
+    Addr GetOriginAddr();
 
 private:
 	vector<unsigned short int> data_vec;  //转换后的数据序列

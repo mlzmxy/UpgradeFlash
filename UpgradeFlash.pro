@@ -29,14 +29,16 @@ SOURCES += \
         mainwindow.cpp \
     hexparsing.cpp \
     canfunc.cpp \
-    upgradeproc.cpp
+    upgradeproc.cpp \
+    crc16.cpp
 
 HEADERS += \
         mainwindow.h \
     hexparsing.h \
     CAN_TO_USB.h \
     canfunc.h \
-    upgradeproc.h
+    upgradeproc.h \
+    crc16.h
 
 FORMS += \
         mainwindow.ui

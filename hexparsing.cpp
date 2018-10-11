@@ -175,7 +175,17 @@ string HexParsing::GetErrorMsg()
 		msg = "第" + std::to_string(error_rec) + "行, vector越界";
 		break;
 	}
-	return msg;
+    return msg;
+}
+
+unsigned int HexParsing::GetAddrLength()
+{
+    return this->len;
+}
+
+Addr HexParsing::GetOriginAddr()
+{
+    return this->addr_origin;
 }
 
 /**

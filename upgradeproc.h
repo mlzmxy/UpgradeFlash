@@ -35,7 +35,7 @@ private:
         toggle = 0x12,
         version = 0x13,
         erase = 0x14,
-        dataBlockSize = 0x15,
+        dataBlockInfo = 0x15,
         flashData = 0x16,
         checkSum = 0x17,
         program = 0x18,
@@ -49,6 +49,7 @@ private:
     vector<unsigned short int> data;
     HexParsing* hex_parsing;
     CanFunc* can_func;
+    unsigned short int data_block_size;
     unsigned int error_code;
 
     // can struct
