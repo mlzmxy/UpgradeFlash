@@ -1,3 +1,4 @@
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -51,13 +52,20 @@ HexParsing::HexParsing(string file_path_name, unsigned int origin_address,
  */
 bool HexParsing::Convert()
 {
+    error_code = 0;  //清除错误标志
 	char buf[80];  //hex每一行的数据
 	LineForm line_data;
 	Addr addr_t = { 0 }; //32位地址
 
+    if((this->len > 0x18000) || (this->len % 0x8000 != 0)) {
+        error_code = ADDRESS_LENGTH_ILLEGAL;
+        return false;
+    }
+
 	ifstream in_file(file);
 	if (!in_file.is_open()) {
 		error_code = FILE_OPEN_ERROR;
+        in_file.clear();
 		return false;
 	}
 
@@ -86,32 +94,26 @@ bool HexParsing::Convert()
 							error_rec = line_number;
 							return false;
 						}
-					}
-					else if (0x04 == line_data.l_type) {  //切换高位地址
+                    } else if (0x04 == line_data.l_type) {  //切换高位地址
 						addr_t.addr_16.addr_h = line_data.l_data[0];
-					}
-					else if (0x01 == line_data.l_type) {  //文件结束
+                    } else if (0x01 == line_data.l_type) {  //文件结束
 						file_end_flag = 1;
 						break;
-					}
-					else {
+                    } else {
 						error_code = FILE_LINE_TYPE_ERROR;
 						error_rec = line_number;
 						return false;
 					}
-				}
-				else {
+                } else {
 					error_code = FILE_LINE_CHECK_ERROR;
 					error_rec = line_number;
 					return false;
 				}
-			}
-			else {
+            } else {
 				error_rec = line_number;
 				return false;
 			}
-		}
-		else {
+        } else {
 			error_code = FILE_LINE_ERROR;
 			error_rec = line_number;
 			return false;
@@ -125,8 +127,7 @@ bool HexParsing::Convert()
 
 	if (file_end_flag) {
 		return true;
-	}
-	else {
+    } else {
 		error_code = FILE_NOEND_ERROR;
 		error_rec = line_number;
 		return false;
@@ -167,11 +168,11 @@ string HexParsing::GetErrorMsg()
 	case ADDRESS_OUT_OF_RANGE:
 		msg = "第" + std::to_string(error_rec) + "行, 地址越界";
 		break;
+    case ADDRESS_LENGTH_ILLEGAL:
+        msg = "地址长度非法";
+        break;
 	case VECTOR_OUT_OF_RANGE:
 		msg = "第" + std::to_string(error_rec) + "行, vector越界";
-		break;
-	default:
-		msg = "未知错误";
 		break;
 	}
 	return msg;

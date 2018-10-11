@@ -7,12 +7,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-extern unsigned int flag_dll_funcs;
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    upgrade_proc(new UpgradeProc),
+    upgrade_proc(new UpgradeProc(ui)),
     file_path_name(""),
     flag_updating(1)
 {
@@ -42,10 +40,15 @@ void MainWindow::on_select_button_clicked()
 
 void MainWindow::on_upgrade_button_clicked()
 {
-    if(flag_updating) {
-        upgrade_proc->SetHexParseSettings(this->file_path_name.toStdString(), 0x328000, 0x8000);
-        flag_updating = 0;
+    upgrade_proc->SetHexParseSettings(this->file_path_name.toStdString(), 0x328000, 0x8000);
+    if(upgrade_proc->ParseHexFile()) {
+        ui->textBrowser->append(tr("Hex文件解析成功"));
+        if(upgrade_proc->Process()) {
+            QMessageBox::information(this, tr("信息"), tr("升级成功!"), QMessageBox::Cancel);
+        } else {
+            QMessageBox::warning(this, tr("错误"), upgrade_proc->GetErrorMsg().c_str(), QMessageBox::Cancel);
+        }
     } else {
-        QMessageBox::information(this, tr("信息"), tr("正在升级..."), QMessageBox::Cancel);
+        QMessageBox::warning(this, tr("错误"), upgrade_proc->GetErrorMsg().c_str(), QMessageBox::Cancel);
     }
 }

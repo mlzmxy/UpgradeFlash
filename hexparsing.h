@@ -67,6 +67,8 @@ private:
 #define FILE_LINE_TYPE_ERROR    0x06  //行数据类型错误
 #define FILE_NOEND_ERROR        0x07  //hex文件无结束行
 #define ADDRESS_OUT_OF_RANGE    0x08  //地址越界
-#define VECTOR_OUT_OF_RANGE     0x09  //vector存储越界
+#define ADDRESS_LENGTH_ILLEGAL  0x09  //地址长度非法
+#define VECTOR_OUT_OF_RANGE     0x0A  //vector存储越界
+
 
 #endif // HEXPARSING_H

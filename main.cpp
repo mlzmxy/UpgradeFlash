@@ -13,12 +13,12 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
-    CanFunc test_can_funcs;
-    if(test_can_funcs.LoadDllFuncs()) {
-        w.SetTextInfo("CAN_TO_USB.dll加载成功\n驱动函数链接成功");
-    } else {
-        QMessageBox::warning(nullptr, "错误", test_can_funcs.GetErrorMsg().c_str(), QMessageBox::Cancel);
-    }
+//    CanFunc test_can_funcs;
+//    if(test_can_funcs.LoadDllFuncs()) {
+//        //w.SetTextInfo("CAN_TO_USB.dll加载成功\n驱动函数链接成功");
+//    } else {
+//        QMessageBox::warning(nullptr, "错误", test_can_funcs.GetErrorMsg().c_str(), QMessageBox::Cancel);
+//    }
 
     return a.exec();
 }

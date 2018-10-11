@@ -20,7 +20,7 @@ public:
     CanFunc();
     ~CanFunc();
 
-    bool LoadDllFuncs();
+    bool IsInitialized();
 
     bool OpenDevice(DWORD DevIndex);
     bool CloseDevice(DWORD DevIndex);
@@ -36,6 +36,7 @@ public:
 
 private:
     int error_code;
+    VCI_INIT_CONFIG init_config;  //初始化参数
 
     Func1 _OpenDevice;
     Func1 _CloseDevice;
@@ -48,7 +49,14 @@ private:
     Func2 _ClearBuffer;
 };
 
+// CAN
+#define Dev_Index 0  //设备索引号
+#define Can_Index_0 0  //第0路CAN
+#define Can_Index_1 0  //第1路CAN
+
 #define ERROR_LOAD_DLL 0x1        //DLL加载失败
 #define ERROR_LINK_DLL_FUNCS 0x2  //DLL函数链接失败
+#define ERROR_OPENDEVICE 0x3      //打开设备失败
+#define ERROR_InitCan 0x4         //CAN初始化失败
 
 #endif // CANFUNC_H

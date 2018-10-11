@@ -17,16 +17,14 @@ CanFunc::CanFunc()
      _GetReceiveNum(nullptr),
      _ClearBuffer(nullptr)
 {
+    //can初始化设置
+    init_config.AccCode = 0x00000000;
+    init_config.AccMask = 0xFFFFFFFF;
+    init_config.Filter = 0;
+    init_config.Timing0 = 0x01;  //250Kbps
+    init_config.Timing1 = 0x1C;
+    init_config.Mode = 0;
 
-}
-
-CanFunc::~CanFunc()
-{
-
-}
-
-bool CanFunc::LoadDllFuncs()
-{
     //加载动态链接库CAN_TO_USB.dll
     QLibrary can_to_usb_lib("CAN_TO_USB");
     if (can_to_usb_lib.load()) {
@@ -40,15 +38,29 @@ bool CanFunc::LoadDllFuncs()
         _GetReceiveNum = (Func7)can_to_usb_lib.resolve("VCI_GetReceiveNum");
         _ClearBuffer = (Func2)can_to_usb_lib.resolve("VCI_ClearBuffer");
 
-        if(!(_OpenDevice || _CloseDevice || _ResetCan || _InitCan || _Transmit
-                || _ReadDevSn || _Receive || _GetReceiveNum || _ClearBuffer)) {
+        if(_OpenDevice || _CloseDevice || _ResetCan || _InitCan || _Transmit
+                || _ReadDevSn || _Receive || _GetReceiveNum || _ClearBuffer)
+            if(_OpenDevice(Dev_Index))
+                if(!_InitCan(Dev_Index, Can_Index_1, &init_config))
+                    error_code = ERROR_InitCan;
+            else
+                error_code = ERROR_OPENDEVICE;
+        else
             error_code = ERROR_LINK_DLL_FUNCS;
-            return false;
-        }
+
     } else {
         error_code = ERROR_LOAD_DLL;
-        return false;
     }
+}
+
+CanFunc::~CanFunc()
+{
+}
+
+bool CanFunc::IsInitialized()
+{
+    if(error_code)
+        return false;
     return true;
 }
 
@@ -108,8 +120,12 @@ std::string CanFunc::GetErrorMsg()
     case ERROR_LINK_DLL_FUNCS:
         msg = "DLL函数链接失败";
         break;
-    default:
-        msg = "未知错误";
+    case ERROR_OPENDEVICE:
+        msg = "打开CAN设备失败";
+        break;
+    case ERROR_InitCan:
+        msg = "CAN初始化失败";
+        break;
     }
     return msg;
 }
