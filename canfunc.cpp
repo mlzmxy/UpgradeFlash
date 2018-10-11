@@ -7,15 +7,15 @@
 
 CanFunc::CanFunc()
     :error_code(0),
-     _OpenDevice(NULL),
-     _CloseDevice(NULL),
-     _ResetCan(NULL),
-     _InitCan(NULL),
-     _Transmit(NULL),
-     _ReadDevSn(NULL),
-     _Receive(NULL),
-     _GetReceiveNum(NULL),
-     _ClearBuffer(NULL)
+     _OpenDevice(nullptr),
+     _CloseDevice(nullptr),
+     _ResetCan(nullptr),
+     _InitCan(nullptr),
+     _Transmit(nullptr),
+     _ReadDevSn(nullptr),
+     _Receive(nullptr),
+     _GetReceiveNum(nullptr),
+     _ClearBuffer(nullptr)
 {
 
 }

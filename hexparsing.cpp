@@ -309,7 +309,7 @@ bool HexParsing::CharBuffer2HexData(char* buf, PLineForm data)
  */
 unsigned short int HexParsing::Char2ShortInt(char d_4, char d_3, char d_2, char d_1)
 {
-	return (Char2Int(d_4) << 12 | Char2Int(d_3) << 8 | Char2Int(d_2) << 4 | Char2Int(d_1));
+    return static_cast<unsigned short int>((Char2Int(d_4) << 12 | Char2Int(d_3) << 8 | Char2Int(d_2) << 4 | Char2Int(d_1)));
 }
 
 /**
@@ -323,7 +323,7 @@ unsigned short int HexParsing::Char2ShortInt(char d_4, char d_3, char d_2, char 
  */
 unsigned short int HexParsing::Char2IntByte(char d_h, char d_l)
 {
-	return (Char2Int(d_h) << 4 | Char2Int(d_l));
+    return static_cast<unsigned short int>((Char2Int(d_h) << 4 | Char2Int(d_l)));
 }
 
 /**

@@ -42,14 +42,10 @@ void MainWindow::on_select_button_clicked()
 
 void MainWindow::on_upgrade_button_clicked()
 {
-    if(flag_dll_funcs) {
-        if(flag_updating) {
-
-            flag_updating = 0;
-        } else {
-            QMessageBox::information(this, tr("错误"), tr("正在升级..."), QMessageBox::Cancel);
-        }
+    if(flag_updating) {
+        upgrade_proc->SetHexParseSettings(this->file_path_name.toStdString(), 0x328000, 0x8000);
+        flag_updating = 0;
     } else {
-        QMessageBox::warning(this, tr("错误"), tr("CAN_TO_USB函数加载失败!"), QMessageBox::Cancel);
+        QMessageBox::information(this, tr("信息"), tr("正在升级..."), QMessageBox::Cancel);
     }
 }
