@@ -189,6 +189,11 @@ Addr HexParsing::GetOriginAddr()
     return this->addr_origin;
 }
 
+Addr HexParsing::GetEndAddr()
+{
+    return this->addr_end;
+}
+
 /**
  * GetDataMap  返回转换后的数据序列
  * 

@@ -42,6 +42,7 @@ public:
 	string GetErrorMsg();
     unsigned int GetAddrLength();
     Addr GetOriginAddr();
+    Addr GetEndAddr();
 
 private:
 	vector<unsigned short int> data_vec;  //转换后的数据序列

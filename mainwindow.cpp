@@ -45,8 +45,9 @@ void MainWindow::on_upgrade_button_clicked()
         ui->textBrowser->append(tr("Hex文件解析成功"));
         if(upgrade_proc->Process()) {
             QMessageBox::information(this, tr("信息"), tr("升级成功!"), QMessageBox::Cancel);
+            ui->progressBar->setValue(100);
         } else {
-            QMessageBox::warning(this, tr("错误"), upgrade_proc->GetErrorMsg().c_str(), QMessageBox::Cancel);
+            QMessageBox::warning(this, tr("错误"), tr("升级失败!"), QMessageBox::Cancel);
         }
     } else {
         QMessageBox::warning(this, tr("错误"), upgrade_proc->GetErrorMsg().c_str(), QMessageBox::Cancel);
