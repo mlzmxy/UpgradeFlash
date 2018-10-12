@@ -44,9 +44,11 @@ void MainWindow::on_upgrade_button_clicked()
     if(upgrade_proc->ParseHexFile()) {
         ui->textBrowser->append(tr("Hex文件解析成功"));
         if(upgrade_proc->Process()) {
+            ui->textBrowser->append(tr("升级成功!"));
             QMessageBox::information(this, tr("信息"), tr("升级成功!"), QMessageBox::Cancel);
             ui->progressBar->setValue(100);
         } else {
+            ui->textBrowser->append(tr("升级失败!"));
             QMessageBox::warning(this, tr("错误"), tr("升级失败!"), QMessageBox::Cancel);
         }
     } else {

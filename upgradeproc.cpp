@@ -10,7 +10,7 @@
 UpgradeProc::UpgradeProc() :
     hex_parsing(new HexParsing),
     can_func(new CanFunc),
-    data_block_size(0x100),
+    data_block_size(0x200),
     error_code(0)
 {
 }
@@ -19,7 +19,7 @@ UpgradeProc::UpgradeProc(Ui::MainWindow *main_ui) :
     ui(main_ui),
     hex_parsing(new HexParsing),
     can_func(new CanFunc),
-    data_block_size(0x100),
+    data_block_size(0x200),
     error_code(0)
 {
     can_data.resize(8);
@@ -51,7 +51,7 @@ bool UpgradeProc::Process()
         this->ui->textBrowser->append("CAN设备初始化完成");
         //this->ui->textBrowser->moveCursor(QTextCursor::End);
     } else {
-        this->ui->textBrowser->append("CAN设备初始化失败");
+        this->ui->textBrowser->append(can_func->GetErrorMsg().c_str());
         return false;
     }
 
@@ -159,12 +159,11 @@ bool UpgradeProc::Process()
             can_data.at(5) = 0;
             can_data.at(6) = 0;
             can_data.at(7) = 0;
-            can_data.at(8) = 0;
             if(!CanSendData()) {
                 this->ui->textBrowser->append("CAN发送失败");
                 return false;
             }
-            this->ui->textBrowser->append(QString("第" + QString::number(data_block_num) +"块数据校验-->"));
+            //this->ui->textBrowser->append(QString("第" + QString::number(data_block_num) +"块数据校验-->"));
             check_flow = checkSum;
             upgrade_flow = receiveWait;
             break;
@@ -174,7 +173,7 @@ bool UpgradeProc::Process()
                 this->ui->textBrowser->append("CAN发送失败");
                 return false;
             }
-            this->ui->textBrowser->append(QString("第" + QString::number(data_block_num) +"块数据烧写-->"));
+            //this->ui->textBrowser->append(QString("第" + QString::number(data_block_num) +"块数据烧写-->"));
             check_flow = program;
             upgrade_flow = receiveWait;
             break;
@@ -184,7 +183,7 @@ bool UpgradeProc::Process()
                 this->ui->textBrowser->append("CAN发送失败");
                 return false;
             }
-            this->ui->textBrowser->append(QString("第" + QString::number(data_block_num) +"块数据烧写校验-->"));
+            //this->ui->textBrowser->append(QString("第" + QString::number(data_block_num) +"块数据烧写校验-->"));
             check_flow = verify;
             upgrade_flow = receiveWait;
             break;
@@ -261,12 +260,12 @@ bool UpgradeProc::Process()
                 break;
             case version:
                 if(check_flow == version) {
-                    if(0x210 == (can_data.at(1) + (can_data.at(2) >> 8))) {
+                    if(0x210 == (can_data.at(1) + (can_data.at(2) << 8))) {
                         this->ui->textBrowser->append("  DSP Flash API版本正确: " + QString::number(0x210, 16));
                         this->ui->progressBar->setValue(++progress_bar_value);
                     } else {
                         this->ui->textBrowser->append("  DSP Flash API版本错误: " +
-                                 QString::number((can_data.at(1) + (can_data.at(2) >> 8)), 16));
+                                 QString::number((can_data.at(1) + (can_data.at(2) << 8)), 16));
                         return false;
                     }
                     upgrade_flow = erase;
@@ -293,7 +292,7 @@ bool UpgradeProc::Process()
             case dataBlockInfo:
                 if(check_flow == dataBlockInfo) {
                     if(0x55 == can_data.at(1)) {
-                        this->ui->textBrowser->append("  数据块信息回复，起始地址对齐成功");
+                        this->ui->textBrowser->append("  起始地址对齐成功");
                         progress_bar_value += bar_value_added;
                         this->ui->progressBar->setValue(progress_bar_value);
 
@@ -311,6 +310,8 @@ bool UpgradeProc::Process()
                 if(check_flow == flashData) {
                     if(0x55 == can_data.at(1)) {
                         num_16bit_data += 2;
+                        this->ui->textBrowser->append("  "+QString::number(num_16bit_data-num_datablock_start)+"  " +
+                                                      QString::number(num_16bit_data));
                     } else {
                         if((can_data.at(2) + (can_data.at(3) << 8)) < data_block_size) {
                             this->ui->textBrowser->append("  " + QString::number(addr.addr_32 + num_16bit_data, 16)
@@ -321,7 +322,7 @@ bool UpgradeProc::Process()
                             return false;
                         }
                     }
-                    if((num_16bit_data - num_datablock_start) != (can_data.at(2) + (can_data.at(3) << 8))) {
+                    if((num_16bit_data - num_datablock_start) != static_cast<unsigned int>(can_data.at(2) + (can_data.at(3) << 8))) {
                         this->ui->textBrowser->append("  " + QString::number(addr.addr_32 + num_16bit_data, 16)
                              + "," +QString::number(addr.addr_32 + num_16bit_data +1, 16)+ ": DSP接收数据错位");
                         return false;
@@ -369,19 +370,21 @@ bool UpgradeProc::Process()
             case verify:
                 if(check_flow == verify) {
                     if(0x55 == can_data.at(1)) {
-                        this->ui->textBrowser->append("  烧写校验成功");
+                        this->ui->textBrowser->append("  Flash校验成功");
                         progress_bar_value += bar_value_added;
                         this->ui->progressBar->setValue(progress_bar_value);
                     } else {
-                        this->ui->textBrowser->append("  烧写校验失败");
+                        this->ui->textBrowser->append("  Flash校验失败");
                         return false;
                     }
                     data_block_num++;
-                    if((addr_origin.addr_32 + num_16bit_data) == addr_end.addr_32)
+                    if((addr_origin.addr_32 + num_16bit_data) == addr_end.addr_32) {
                         upgrade_flow = changeUpdateFlag;
-                    upgrade_flow = dataBlockInfo;
+                    } else {
+                        upgrade_flow = dataBlockInfo;
+                    }
                 } else {
-                    this->ui->textBrowser->append("  烧写校验命令回复错位" + QString::number(check_flow));
+                    this->ui->textBrowser->append("  Flash校验命令回复错位" + QString::number(check_flow));
                     return false;
                 }
                 break;

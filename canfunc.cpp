@@ -39,14 +39,17 @@ CanFunc::CanFunc()
         _ClearBuffer = (Func2)can_to_usb_lib.resolve("VCI_ClearBuffer");
 
         if(_OpenDevice || _CloseDevice || _ResetCan || _InitCan || _Transmit
-                || _ReadDevSn || _Receive || _GetReceiveNum || _ClearBuffer)
-            if(_OpenDevice(Dev_Index))
-                if(!_InitCan(Dev_Index, Can_Index_1, &init_config))
+                || _ReadDevSn || _Receive || _GetReceiveNum || _ClearBuffer) {
+            if(_OpenDevice(Dev_Index)) {
+                if(!_InitCan(Dev_Index, Can_Index_1, &init_config)) {
                     error_code = ERROR_InitCan;
-            else
+                }
+            } else {
                 error_code = ERROR_OPENDEVICE;
-        else
+            }
+        } else {
             error_code = ERROR_LINK_DLL_FUNCS;
+        }
 
     } else {
         error_code = ERROR_LOAD_DLL;

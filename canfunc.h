@@ -52,7 +52,7 @@ private:
 // CAN
 #define Dev_Index 0  //设备索引号
 #define Can_Index_0 0  //第0路CAN
-#define Can_Index_1 0  //第1路CAN
+#define Can_Index_1 1  //第1路CAN
 
 #define ERROR_LOAD_DLL 0x1        //DLL加载失败
 #define ERROR_LINK_DLL_FUNCS 0x2  //DLL函数链接失败
