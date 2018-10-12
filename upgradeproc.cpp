@@ -229,12 +229,12 @@ bool UpgradeProc::Process()
                 break;
             case version:
                 if(check_flow == version) {
-                    if(0x210 == (can_data.at(1) + can_data.at(2) >> 8)) {
+                    if(0x210 == (can_data.at(1) + (can_data.at(2) >> 8))) {
                         this->ui->textBrowser->append("DSP Flash API版本正确: " + QString::number(0x210, 16));
                         this->ui->progressBar->setValue(++progress_bar_value);
                     } else {
                         this->ui->textBrowser->append("DSP Flash API版本错误: " +
-                                 QString::number((can_data.at(1) + can_data.at(2) >> 8), 16));
+                                 QString::number((can_data.at(1) + (can_data.at(2) >> 8)), 16));
                         return false;
                     }
                     upgrade_flow = erase;
@@ -262,7 +262,6 @@ bool UpgradeProc::Process()
                 if(check_flow == dataBlockInfo) {
                     if(0x55 == can_data.at(1)) {
                         this->ui->textBrowser->append("数据块信息反馈，起始地址对齐成功");
-                        this->ui->progressBar->setValue(++progress_bar_value);
                     } else {
                         this->ui->textBrowser->append("数据块信息反馈，起始地址对齐错误");
                         return false;
@@ -278,17 +277,35 @@ bool UpgradeProc::Process()
                     if(0x55 == can_data.at(1)) {
                         num_16bit_data += 2;
                     } else {
-                        this->ui->textBrowser->append("第"+ QString::number(num_16bit_data) + "个数据校验错误");
-                        return false;
+                        this->ui->textBrowser->append(QString::number(addr.addr_32 + num_16bit_data, 16)
+                                 + "," +QString::number(addr.addr_32 + num_16bit_data +1, 16)+ " 数据校验错误, 正在重新发送...");
+                        //return false;
                     }
-                    if()
-                    upgrade_flow = flashData;
+                    if((num_16bit_data - num_datablock_start) == data_block_size) {
+                        this->ui->textBrowser->append("数据发送完成");
+                        upgrade_flow = checkSum;
+                    } else {
+                        upgrade_flow = flashData;
+                    }
                 } else {
                     this->ui->textBrowser->append("数据信息回复错位" + QString::number(check_flow));
                     return false;
                 }
                 break;
             case checkSum:
+                if(check_flow == checkSum) {
+                    if(0x55 == can_data.at(1)) {
+                        this->ui->textBrowser->append("校验成功");
+                        upgrade_flow = program;
+                    } else {
+                        this->ui->textBrowser->append("校验失败，重新发送");
+                        num_16bit_data = num_datablock_start;
+                        upgrade_flow = dataBlockInfo;
+                    }
+                } else {
+                    this->ui->textBrowser->append("块数据校验命令错位" + QString::number(check_flow));
+                    return false;
+                }
                 break;
             case program:
                 break;

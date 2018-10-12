@@ -124,6 +124,7 @@ bool HexParsing::Convert()
 	}
 
 	in_file.close();
+    in_file.clear();
 
 	if (file_end_flag) {
 		return true;
