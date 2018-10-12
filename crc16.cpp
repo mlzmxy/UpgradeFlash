@@ -13,7 +13,11 @@
  * Output for "123456789"     : 31C3
  */
 
+#include <vector>
+
 #include "crc16.h"
+
+using std::vector;
 
 static const unsigned short crc16tab[256]= {
     0x0000,0x1021,0x2042,0x3063,0x4084,0x50a5,0x60c6,0x70e7,
@@ -64,5 +68,33 @@ unsigned short crc16(const char *buf, int len)
     unsigned short crc = 0;
     for (counter = 0; counter < len; counter++)
         crc = (crc << 8) ^ crc16tab[((crc >> 8) ^ *buf++) & 0x00FF];
+    return crc;
+}
+
+unsigned short CrcOf4Char(const char ch1, const char ch2, const char ch3, const char ch4)
+{
+    int counter;
+    char buf[4];
+    buf[0] = ch1;
+    buf[1] = ch2;
+    buf[2] = ch3;
+    buf[3] = ch4;
+    unsigned short crc = 0;
+    for (counter = 0; counter < 4; counter++)
+        crc = (crc << 8) ^ crc16tab[((crc >> 8) ^ buf[counter]) & 0x00FF];
+    return crc;
+}
+
+unsigned short CrcOfDataBlock(const vector<unsigned short> &buf,
+                              unsigned int num_start, unsigned short len)
+{
+    int counter;
+    unsigned short crc = 0;
+    for(counter = 0; counter < len; counter++)
+    {
+        crc = (crc << 8) ^ crc16tab[((crc >> 8) ^ (buf.at(num_start) & 0x00FF)) & 0x00FF];
+        crc = (crc << 8) ^ crc16tab[((crc >> 8) ^ ((buf.at(num_start) >> 8) & 0x00FF)) & 0x00FF];
+        num_start++;
+    }
     return crc;
 }

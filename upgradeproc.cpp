@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "upgradeproc.h"
+#include "crc16.h"
 
 
 UpgradeProc::UpgradeProc() :
@@ -33,8 +34,14 @@ UpgradeProc::~UpgradeProc()
 bool UpgradeProc::Process()
 {
     unsigned int data_block_num = 1;  //发送数据块计数
-    Addr addr = hex_parsing->GetOriginAddr();  //数据地址
-    Addr addr_temp;  //备份地址
+    unsigned int num_datablock_start = 0;  //数据块起始数据在vector中的位置
+    unsigned int num_16bit_data = 0;  //flash数据计数
+    unsigned int tmp_num_16bit_data = 0;  //备份
+    unsigned short crc_value = 0;  //CRC16校验值
+    int progress_bar_value = 0;
+    Addr addr_origin = hex_parsing->GetOriginAddr();  //起始地址
+    unsigned int addr_len = hex_parsing->GetAddrLength();  //地址长度
+    Addr addr = addr_origin;  //数据地址
     Flow upgrade_flow = handshake;
     Flow check_flow = handshake;
     error_code = 0;
@@ -55,7 +62,7 @@ bool UpgradeProc::Process()
         case handshake:
             this->ui->textBrowser->append("开始升级...");
             this->ui->textBrowser->append("等待握手-->");
-            this->ui->progressBar->setValue(1);
+            this->ui->progressBar->setValue(++progress_bar_value);
             //发送握手指令
             can_data.at(0) = handshake;
             CanSendCmdData(handshake);
@@ -64,6 +71,7 @@ bool UpgradeProc::Process()
             break;
         case unlockCSM:
             this->ui->textBrowser->append("等待CSM解锁-->");
+            this->ui->progressBar->setValue(++progress_bar_value);
             //发送解锁指令
             can_data.at(0) = unlockCSM;
             CanSendCmdData(unlockCSM);
@@ -72,6 +80,7 @@ bool UpgradeProc::Process()
             break;
         case toggle:
             this->ui->textBrowser->append("等待toggle测试-->");
+            this->ui->progressBar->setValue(++progress_bar_value);
             //发送toggle指令
             can_data.at(0) = toggle;
             CanSendCmdData(toggle);
@@ -96,7 +105,8 @@ bool UpgradeProc::Process()
             break;
         case dataBlockInfo:
             this->ui->textBrowser->append(QString("发送第" + QString::number(data_block_num) +"块数据信息-->"));
-            //发送解锁指令
+            num_datablock_start = (data_block_num - 1) * data_block_size;
+            //发送数据块信息
             can_data.at(0) = dataBlockInfo;
             can_data.at(1) = 0;
             can_data.at(2) = addr.addr_16.addr_l & 0x00FF;          //地址位 7-0
@@ -111,48 +121,59 @@ bool UpgradeProc::Process()
             break;
         case flashData:
             //发送数据
+            tmp_num_16bit_data = num_16bit_data;
             can_data.at(0) = flashData;
             can_data.at(1) = 0;
-            can_data.at(2) = flashData;
-            can_data.at(3) = flashData;
-            can_data.at(4) = flashData;
-            can_data.at(5) = flashData;
-            can_data.at(6) = flashData;
-            can_data.at(7) = flashData;
+            can_data.at(2) = data.at(tmp_num_16bit_data) & 0x00FF;
+            can_data.at(3) = (data.at(tmp_num_16bit_data++) >> 8) & 0x00FF;
+            can_data.at(4) = data.at(tmp_num_16bit_data) & 0x00FF;
+            can_data.at(5) = (data.at(tmp_num_16bit_data++) >> 8) & 0x00FF;
+            crc_value = CrcOf4Char(can_data.at(2), can_data.at(3), can_data.at(4), can_data.at(5));
+            can_data.at(6) = crc_value & 0x00FF;
+            can_data.at(7) = (crc_value >> 8) & 0x00FF;
             CanSendData();
             check_flow = flashData;
             upgrade_flow = receiveWait;
             break;
         case checkSum:
-            this->ui->textBrowser->append("等待CSM解锁-->");
-            //发送解锁指令
-            can_data.at(0) = unlockCSM;
-            CanSendCmdData(unlockCSM);
-            check_flow = unlockCSM;
+            this->ui->textBrowser->append(QString("第" + QString::number(data_block_num) +"块数据校验-->"));
+            //发送校验值
+            can_data.at(0) = checkSum;
+            can_data.at(1) = 0;
+            crc_value = CrcOfDataBlock(this->data, num_datablock_start, this->data_block_size);
+            can_data.at(2) = crc_value & 0x00FF;
+            can_data.at(3) = (crc_value >> 8) & 0x00FF;
+            can_data.at(4) = 0;
+            can_data.at(5) = 0;
+            can_data.at(6) = 0;
+            can_data.at(7) = 0;
+            can_data.at(8) = 0;
+            CanSendData();
+            check_flow = checkSum;
             upgrade_flow = receiveWait;
             break;
         case program:
-            this->ui->textBrowser->append("等待CSM解锁-->");
-            //发送解锁指令
-            can_data.at(0) = unlockCSM;
-            CanSendCmdData(unlockCSM);
-            check_flow = unlockCSM;
+            this->ui->textBrowser->append(QString("第" + QString::number(data_block_num) +"块数据烧写-->"));
+            //发送program指令
+            can_data.at(0) = program;
+            CanSendCmdData(program);
+            check_flow = program;
             upgrade_flow = receiveWait;
             break;
         case verify:
-            this->ui->textBrowser->append("等待CSM解锁-->");
-            //发送解锁指令
-            can_data.at(0) = unlockCSM;
-            CanSendCmdData(unlockCSM);
-            check_flow = unlockCSM;
+            this->ui->textBrowser->append(QString("第" + QString::number(data_block_num) +"块数据烧写校验-->"));
+            //发送校验指令
+            can_data.at(0) = verify;
+            CanSendCmdData(verify);
+            check_flow = verify;
             upgrade_flow = receiveWait;
             break;
         case resetDSP:
-            this->ui->textBrowser->append("等待CSM解锁-->");
+            this->ui->textBrowser->append("发送重启DSP指令-->");
             //发送解锁指令
-            can_data.at(0) = unlockCSM;
-            CanSendCmdData(unlockCSM);
-            check_flow = unlockCSM;
+            can_data.at(0) = resetDSP;
+            CanSendCmdData(resetDSP);
+            check_flow = resetDSP;
             upgrade_flow = receiveWait;
             break;
         case receiveWait:
@@ -165,30 +186,107 @@ bool UpgradeProc::Process()
                 if(check_flow == handshake) {
                     if(0x55 == can_data.at(1)) {
                         this->ui->textBrowser->append("握手成功");
-                        this->ui->progressBar->setValue(2);
+                        this->ui->progressBar->setValue(++progress_bar_value);
                     } else {
                         this->ui->textBrowser->append("握手失败");
                         return false;
                     }
                     upgrade_flow = unlockCSM;
                 } else {
-                    //error_code = ERROR_RECMD_DISLOCATION;
-                    //upgrade_flow = updateFailed;
-                    this->ui->textBrowser->append("命令回复错位");
+                    this->ui->textBrowser->append("握手命令回复错位 " + QString::number(check_flow));
                     return false;
                 }
                 break;
             case unlockCSM:
+                if(check_flow == unlockCSM) {
+                    if(0x55 == can_data.at(1)) {
+                        this->ui->textBrowser->append("CSM解锁成功");
+                        this->ui->progressBar->setValue(++progress_bar_value);
+                    } else {
+                        this->ui->textBrowser->append("CSM解锁失败");
+                        return false;
+                    }
+                    upgrade_flow = toggle;
+                } else {
+                    this->ui->textBrowser->append("解锁CSM命令回复错位" + QString::number(check_flow));
+                    return false;
+                }
                 break;
             case toggle:
+                if(check_flow == toggle) {
+                    if(0x55 == can_data.at(1)) {
+                        this->ui->textBrowser->append("Toggle测试成功");
+                        this->ui->progressBar->setValue(++progress_bar_value);
+                    } else {
+                        this->ui->textBrowser->append("Toggle测试失败");
+                        return false;
+                    }
+                    upgrade_flow = version;
+                } else {
+                    this->ui->textBrowser->append("Toggle测试命令回复错位" + QString::number(check_flow));
+                    return false;
+                }
                 break;
             case version:
+                if(check_flow == version) {
+                    if(0x210 == (can_data.at(1) + can_data.at(2) >> 8)) {
+                        this->ui->textBrowser->append("DSP Flash API版本正确: " + QString::number(0x210, 16));
+                        this->ui->progressBar->setValue(++progress_bar_value);
+                    } else {
+                        this->ui->textBrowser->append("DSP Flash API版本错误: " +
+                                 QString::number((can_data.at(1) + can_data.at(2) >> 8), 16));
+                        return false;
+                    }
+                    upgrade_flow = erase;
+                } else {
+                    this->ui->textBrowser->append("API版本命令回复错位" + QString::number(check_flow));
+                    return false;
+                }
                 break;
             case erase:
+                if(check_flow == erase) {
+                    if(0x55 == can_data.at(1)) {
+                        this->ui->textBrowser->append("Flash擦除成功");
+                        this->ui->progressBar->setValue(++progress_bar_value);
+                    } else {
+                        this->ui->textBrowser->append("Flash擦除失败");
+                        return false;
+                    }
+                    upgrade_flow = dataBlockInfo;
+                } else {
+                    this->ui->textBrowser->append("Flash擦除命令回复错位" + QString::number(check_flow));
+                    return false;
+                }
                 break;
             case dataBlockInfo:
+                if(check_flow == dataBlockInfo) {
+                    if(0x55 == can_data.at(1)) {
+                        this->ui->textBrowser->append("数据块信息反馈，起始地址对齐成功");
+                        this->ui->progressBar->setValue(++progress_bar_value);
+                    } else {
+                        this->ui->textBrowser->append("数据块信息反馈，起始地址对齐错误");
+                        return false;
+                    }
+                    upgrade_flow = flashData;
+                } else {
+                    this->ui->textBrowser->append("数据块信息命令回复错位" + QString::number(check_flow));
+                    return false;
+                }
                 break;
             case flashData:
+                if(check_flow == flashData) {
+                    if(0x55 == can_data.at(1)) {
+                        num_16bit_data += 2;
+                    } else {
+                        this->ui->textBrowser->append("第"+ QString::number(num_16bit_data) + "个数据校验错误");
+                        return false;
+                    }
+                    if()
+                    upgrade_flow = flashData;
+                } else {
+                    this->ui->textBrowser->append("数据信息回复错位" + QString::number(check_flow));
+                    return false;
+                }
                 break;
             case checkSum:
                 break;

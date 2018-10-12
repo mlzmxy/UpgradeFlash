@@ -46,7 +46,7 @@ private:
 
     Ui::MainWindow *ui;
 
-    vector<unsigned short int> data;
+    vector<unsigned short> data;
     HexParsing* hex_parsing;
     CanFunc* can_func;
     unsigned short int data_block_size;
