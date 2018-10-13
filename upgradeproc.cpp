@@ -111,6 +111,7 @@ bool UpgradeProc::Process()
             break;
         case dataBlockInfo:
             num_datablock_start = (data_block_num - 1) * this->data_block_size;
+            num_16bit_data = num_datablock_start;
             addr.addr_32 = addr_origin.addr_32 + (data_block_num - 1) * this->data_block_size;
             //发送数据块信息
             can_data.at(0) = dataBlockInfo;
@@ -125,23 +126,34 @@ bool UpgradeProc::Process()
                 this->ui->textBrowser->append("CAN发送失败");
                 return false;
             }
-            this->ui->textBrowser->append(QString("发送第" + QString::number(data_block_num) +"块数据信息-->"));
+            this->ui->textBrowser->append(QString::number(this->data_block_size));
+            this->ui->textBrowser->append("发送第" + QString::number(data_block_num) +"块数据信息-->");
             check_flow = dataBlockInfo;
             upgrade_flow = receiveWait;
             break;
         case flashData:
             //发送数据
-            tmp_num_16bit_data = num_16bit_data;
-            can_data.at(0) = flashData;
-            can_data.at(1) = 0;
-            can_data.at(2) = data.at(tmp_num_16bit_data) & 0x00FF;
-            can_data.at(3) = (data.at(tmp_num_16bit_data++) >> 8) & 0x00FF;
-            can_data.at(4) = data.at(tmp_num_16bit_data) & 0x00FF;
-            can_data.at(5) = (data.at(tmp_num_16bit_data++) >> 8) & 0x00FF;
-            crc_value = CrcOf4Char(can_data.at(2), can_data.at(3), can_data.at(4), can_data.at(5));
-            can_data.at(6) = crc_value & 0x00FF;
-            can_data.at(7) = (crc_value >> 8) & 0x00FF;
-            if(!CanSendData()) {
+            this->ui->textBrowser->append("  正在发送数据...");
+            while ((num_16bit_data - num_datablock_start) < this->data_block_size) {
+                if((num_16bit_data + 3) < data.capacity()) {
+                    can_data.at(0) = data.at(num_16bit_data) & 0x00FF;
+                    can_data.at(1) = (data.at(num_16bit_data++) >> 8) & 0x00FF;
+                    can_data.at(2) = data.at(num_16bit_data) & 0x00FF;
+                    can_data.at(3) = (data.at(num_16bit_data++) >> 8) & 0x00FF;
+                    can_data.at(4) = data.at(num_16bit_data) & 0x00FF;
+                    can_data.at(5) = (data.at(num_16bit_data++) >> 8) & 0x00FF;
+                    can_data.at(6) = data.at(num_16bit_data) & 0x00FF;
+                    can_data.at(7) = (data.at(num_16bit_data++) >> 8) & 0x00FF;
+                } else {
+                    this->ui->textBrowser->append("读取vector数据越界");
+                }
+                if(!CanSendFlashData()) {
+                    this->ui->textBrowser->append("CAN发送失败");
+                    return false;
+                }
+            }
+
+            if(!CanSendCmdData(flashData)) {
                 this->ui->textBrowser->append("CAN发送失败");
                 return false;
             }
@@ -308,30 +320,12 @@ bool UpgradeProc::Process()
                 break;
             case flashData:
                 if(check_flow == flashData) {
-                    if(0x55 == can_data.at(1)) {
-                        num_16bit_data += 2;
-                        this->ui->textBrowser->append("  "+QString::number(num_16bit_data-num_datablock_start)+"  " +
-                                                      QString::number(num_16bit_data));
-                    } else {
-                        if((can_data.at(2) + (can_data.at(3) << 8)) < data_block_size) {
-                            this->ui->textBrowser->append("  " + QString::number(addr.addr_32 + num_16bit_data, 16)
-                                 + "," +QString::number(addr.addr_32 + num_16bit_data +1, 16)+ " 数据校验错误, 正在重新发送...");
-                        } else {
-                            this->ui->textBrowser->append("  " + QString::number(addr.addr_32 + num_16bit_data, 16)
-                                 + "," +QString::number(addr.addr_32 + num_16bit_data +1, 16)+ ": DSP数据缓冲区已满，数据发送失败");
-                            return false;
-                        }
-                    }
-                    if((num_16bit_data - num_datablock_start) != static_cast<unsigned int>(can_data.at(2) + (can_data.at(3) << 8))) {
-                        this->ui->textBrowser->append("  " + QString::number(addr.addr_32 + num_16bit_data, 16)
-                             + "," +QString::number(addr.addr_32 + num_16bit_data +1, 16)+ ": DSP接收数据错位");
+                    if((num_16bit_data - num_datablock_start) != static_cast<unsigned int>(can_data.at(1) + (can_data.at(2) << 8))) {
+                        this->ui->textBrowser->append("  丢失" + QString::number((num_16bit_data - num_datablock_start) - static_cast<unsigned int>(can_data.at(2) + (can_data.at(3) << 8))) +"个数据");
                         return false;
-                    }
-                    if((num_16bit_data - num_datablock_start) == data_block_size) {
+                    } else {
                         this->ui->textBrowser->append("  数据发送完成");
                         upgrade_flow = checkSum;
-                    } else {
-                        upgrade_flow = flashData;
                     }
                 } else {
                     this->ui->textBrowser->append("  数据信息回复错位" + QString::number(check_flow));
@@ -341,7 +335,7 @@ bool UpgradeProc::Process()
             case checkSum:
                 if(check_flow == checkSum) {
                     if(0x55 == can_data.at(1)) {
-                        this->ui->textBrowser->append("  校验成功");
+                        this->ui->textBrowser->append("  数据校验成功");
                         upgrade_flow = program;
                     } else {
                         this->ui->textBrowser->append("  校验失败，重新发送");
@@ -445,6 +439,30 @@ void UpgradeProc::SetHexParseSettings(std::string file,
 bool UpgradeProc::CanSendData()
 {
     can_data_struct.ID = 0x01A2A3A0;
+    can_data_struct.SendType = 0;
+    can_data_struct.RemoteFlag = 0;
+    can_data_struct.ExternFlag = 1;
+    can_data_struct.DataLen = 8;
+    can_data_struct.Data[0] = can_data.at(0);
+    can_data_struct.Data[1] = can_data.at(1);
+    can_data_struct.Data[2] = can_data.at(2);
+    can_data_struct.Data[3] = can_data.at(3);
+    can_data_struct.Data[4] = can_data.at(4);
+    can_data_struct.Data[5] = can_data.at(5);
+    can_data_struct.Data[6] = can_data.at(6);
+    can_data_struct.Data[7] = can_data.at(7);
+
+    if(can_func->Transmit(Dev_Index, Can_Index_1, &can_data_struct)) {
+        return true;
+    } else {
+        error_code = ERROR_CAN_SEND_FAILED;
+        return false;
+    }
+}
+
+bool UpgradeProc::CanSendFlashData()
+{
+    can_data_struct.ID = 0x01A2A3A4;
     can_data_struct.SendType = 0;
     can_data_struct.RemoteFlag = 0;
     can_data_struct.ExternFlag = 1;

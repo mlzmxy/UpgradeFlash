@@ -58,6 +58,7 @@ private:
     vector<unsigned char> can_data;  //CAN数据
 
     bool CanSendData();
+    bool CanSendFlashData();
     bool CanSendCmdData(Flow flow);
     bool CanReceiveData();
 };
