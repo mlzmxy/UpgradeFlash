@@ -5,7 +5,6 @@
 #include <QDebug>
 
 #include "mainwindow.h"
-#include "canfunc.h"
 
 int main(int argc, char *argv[])
 {

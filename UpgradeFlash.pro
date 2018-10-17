@@ -27,26 +27,32 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    hexparsing.cpp \
-    canfunc.cpp \
-    upgradeproc.cpp \
-    crc16.cpp
+    upgrade_ctrl/canfunc.cpp \
+    upgrade_ctrl/crc16.cpp \
+    upgrade_ctrl/hexparsing.cpp \
+    upgrade_ctrl/message.cpp \
+    upgrade_ctrl/qmsg.cpp \
+    upgrade_ctrl/upgradeproc.cpp \
+    upgradework.cpp
 
 HEADERS += \
         mainwindow.h \
-    hexparsing.h \
-    CAN_TO_USB.h \
-    canfunc.h \
-    upgradeproc.h \
-    crc16.h
+    upgrade_ctrl/CAN_TO_USB.h \
+    upgrade_ctrl/canfunc.h \
+    upgrade_ctrl/crc16.h \
+    upgrade_ctrl/hexparsing.h \
+    upgrade_ctrl/message.h \
+    upgrade_ctrl/qmsg.h \
+    upgrade_ctrl/upgradeproc.h \
+    upgradework.h
 
 FORMS += \
         mainwindow.ui
 
 # Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+#qnx: target.path = /tmp/$${TARGET}/bin
+#else: unix:!android: target.path = /opt/$${TARGET}/bin
+#!isEmpty(target.path): INSTALLS += target
 
 #win32: LIBS += -L$$PWD/./ -lCAN_TO_USB
 

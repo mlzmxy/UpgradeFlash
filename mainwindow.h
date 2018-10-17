@@ -4,8 +4,6 @@
 #include <QMainWindow>
 #include <QString>
 
-#include "upgradeproc.h"
-
 namespace Ui {
 class MainWindow;
 }
@@ -27,10 +25,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-
-    UpgradeProc* upgrade_proc;
-    QString file_path_name;
-    unsigned int flag_updating;
 };
 
 #endif // MAINWINDOW_H

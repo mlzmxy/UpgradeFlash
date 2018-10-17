@@ -8,19 +8,19 @@ using std::vector;
 
 // HEX文件的行格式结构
 typedef struct _LINE_DATA {
-	unsigned short int l_len;      //数据长度
-	unsigned short int l_addr;     //地址
-	unsigned short int l_type;     //记录类型
-	unsigned short int l_data[16]; //数据，这里最大长度为32个字节
-	unsigned short int l_check;    //校验
+    unsigned short l_len;      //数据长度
+    unsigned short l_addr;     //地址
+    unsigned short l_type;     //记录类型
+    unsigned short l_data[16]; //数据，这里最大长度为32个字节
+    unsigned short l_check;    //校验
 }LineForm, *PLineForm;
 
 // 32位地址结构
 typedef union _ADDR {
 	unsigned int addr_32;  //完整地址
 	struct {
-		unsigned short int addr_l;  //地址低位
-		unsigned short int addr_h;  //地址高位
+        unsigned short addr_l;  //地址低位
+        unsigned short addr_h;  //地址高位
 	}addr_16;
 }Addr, *PAddr;
 
@@ -33,31 +33,30 @@ public:
 	~HexParsing();
 
 	bool Convert();
-    void Prepare();
-    void SetFilePathName(string file_path_name);
-	void SetOrigin_Address(unsigned int origin_address);
-	void SetAddrLength(unsigned int addr_length);
+    void SetParameters(string file_path_name, unsigned int origin_address,
+                       unsigned int addr_length);
 
-	vector<unsigned short int> GetDataMap();
+    vector<unsigned short> GetDataMap();
 	string GetErrorMsg();
     unsigned int GetAddrLength();
     Addr GetOriginAddr();
+    Addr GetEndAddr();
 
 private:
-	vector<unsigned short int> data_vec;  //转换后的数据序列
-	string file;                          //源文件
-	Addr addr_origin;                     //起始地址
-	Addr addr_end;                        //结束地址
-	unsigned int len;                     //地址长度
-	unsigned int error_code;              //错误类型
-	unsigned int error_rec;               //错误记录
+    vector<unsigned short> m_data_vec;  //转换后的数据序列
+    string m_file;                          //源文件
+    Addr m_addr_origin;                     //起始地址
+    Addr m_addr_end;                        //结束地址
+    unsigned int m_len;                     //地址长度
+    unsigned int m_error_code;              //错误类型
+    unsigned int m_error_rec;               //错误记录
 
 	bool MappedData(PLineForm data, PAddr addr);
 	bool CheckData(PLineForm data);
 	bool CharBuffer2HexData(char* buf, PLineForm data);
-	unsigned short int Char2IntByte(char d_h, char d_l);
-	unsigned short int Char2ShortInt(char d_4, char d_3, char d_2, char d_1);
-	unsigned short int Char2Int(char ch);
+    unsigned short Char2IntByte(char d_h, char d_l);
+    unsigned short Char2ShortInt(char d_4, char d_3, char d_2, char d_1);
+    unsigned short Char2Int(char ch);
 };
 
 

@@ -1,7 +1,3 @@
-#include <QLibrary>
-#include <QMessageBox>
-#include <QDebug>
-
 #include "CAN_TO_USB.h"
 #include "canfunc.h"
 
@@ -17,6 +13,15 @@ CanFunc::CanFunc()
      _GetReceiveNum(nullptr),
      _ClearBuffer(nullptr)
 {
+
+}
+
+CanFunc::~CanFunc()
+{
+}
+
+bool CanFunc::OpenAndInitDevice()
+{
     //can初始化设置
     init_config.AccCode = 0x00000000;
     init_config.AccMask = 0xFFFFFFFF;
@@ -26,41 +31,38 @@ CanFunc::CanFunc()
     init_config.Mode = 0;
 
     //加载动态链接库CAN_TO_USB.dll
-    QLibrary can_to_usb_lib("CAN_TO_USB");
-    if (can_to_usb_lib.load()) {
-        _OpenDevice = (Func1)can_to_usb_lib.resolve("VCI_OpenDevice");
-        _CloseDevice = (Func1)can_to_usb_lib.resolve("VCI_CloseDevice");
-        _ResetCan = (Func2)can_to_usb_lib.resolve("VCI_ResetCan");
-        _InitCan = (Func3)can_to_usb_lib.resolve("VCI_InitCan");
-        _Transmit = (Func4)can_to_usb_lib.resolve("VCI_Transmit");
-        _ReadDevSn = (Func5)can_to_usb_lib.resolve("VCI_ReadDevSn");
-        _Receive = (Func6)can_to_usb_lib.resolve("VCI_Receive");
-        _GetReceiveNum = (Func7)can_to_usb_lib.resolve("VCI_GetReceiveNum");
-        _ClearBuffer = (Func2)can_to_usb_lib.resolve("VCI_ClearBuffer");
+    HMODULE hMod = LoadLibraryA("CAN_TO_USB.dll");
+    if (hMod) {
+        _OpenDevice = (Func1)GetProcAddress(hMod, "VCI_OpenDevice");
+        _CloseDevice = (Func1)GetProcAddress(hMod, "VCI_CloseDevice");
+        _ResetCan = (Func2)GetProcAddress(hMod, "VCI_ResetCan");
+        _InitCan = (Func3)GetProcAddress(hMod, "VCI_InitCan");
+        _Transmit = (Func4)GetProcAddress(hMod, "VCI_Transmit");
+        _ReadDevSn = (Func5)GetProcAddress(hMod, "VCI_ReadDevSn");
+        _Receive = (Func6)GetProcAddress(hMod, "VCI_Receive");
+        _GetReceiveNum = (Func7)GetProcAddress(hMod, "VCI_GetReceiveNum");
+        _ClearBuffer = (Func2)GetProcAddress(hMod, "VCI_ClearBuffer");
 
-        if(_OpenDevice || _CloseDevice || _ResetCan || _InitCan || _Transmit
-                || _ReadDevSn || _Receive || _GetReceiveNum || _ClearBuffer)
-            if(_OpenDevice(Dev_Index))
-                if(!_InitCan(Dev_Index, Can_Index_1, &init_config))
+        if(_OpenDevice && _CloseDevice && _ResetCan && _InitCan && _Transmit
+                && _ReadDevSn && _Receive && _GetReceiveNum && _ClearBuffer) {
+            if(_OpenDevice(Dev_Index)) {
+                if(!_InitCan(Dev_Index, Can_Index_1, &init_config)) {
                     error_code = ERROR_InitCan;
-            else
+                    return false;
+                }
+            } else {
                 error_code = ERROR_OPENDEVICE;
-        else
+                return false;
+            }
+        } else {
             error_code = ERROR_LINK_DLL_FUNCS;
+            return false;
+        }
 
     } else {
         error_code = ERROR_LOAD_DLL;
-    }
-}
-
-CanFunc::~CanFunc()
-{
-}
-
-bool CanFunc::IsInitialized()
-{
-    if(error_code)
         return false;
+    }
     return true;
 }
 

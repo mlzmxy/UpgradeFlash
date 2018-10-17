@@ -10,12 +10,13 @@ using std::ifstream;
 
 
 HexParsing::HexParsing()
-    :file(""),
-	len(0)
+    :m_file(""),
+    m_len(0),
+    m_error_code(0),
+    m_error_rec(0)
 {
-    addr_origin.addr_32 = 0;
-	addr_end.addr_32 = 0;
-	error_code = 0;
+    m_addr_origin.addr_32 = 0;
+    m_addr_end.addr_32 = 0;
 }
 
 HexParsing::~HexParsing()
@@ -32,14 +33,15 @@ HexParsing::~HexParsing()
  */
 HexParsing::HexParsing(string file_path_name, unsigned int origin_address,
 	unsigned int addr_length)
-	:file(file_path_name),
-	len(addr_length)
+    :m_file(file_path_name),
+    m_len(addr_length),
+    m_error_code(0),
+    m_error_rec(0)
 {
-	addr_origin.addr_32 = origin_address;
-	addr_end.addr_32 = origin_address + addr_length;
+    m_addr_origin.addr_32 = origin_address;
+    m_addr_end.addr_32 = origin_address + addr_length;
 	//设置数据vector大小，并全部初始化为1
-	data_vec.resize(addr_length, 0xFFFF);
-	error_code = 0;
+    m_data_vec.resize(addr_length, 0xFFFF);
 }
 
 /**
@@ -52,19 +54,19 @@ HexParsing::HexParsing(string file_path_name, unsigned int origin_address,
  */
 bool HexParsing::Convert()
 {
-    error_code = 0;  //清除错误标志
+    m_error_code = 0;  //清除错误标志
 	char buf[80];  //hex每一行的数据
 	LineForm line_data;
 	Addr addr_t = { 0 }; //32位地址
 
-    if((this->len > 0x18000) || (this->len % 0x8000 != 0)) {
-        error_code = ADDRESS_LENGTH_ILLEGAL;
+    if((this->m_len == 0) || (this->m_len > 0x18000) || (this->m_len % 0x8000 != 0)) {
+        m_error_code = ADDRESS_LENGTH_ILLEGAL;
         return false;
     }
 
-	ifstream in_file(file);
+    ifstream in_file(m_file);
 	if (!in_file.is_open()) {
-		error_code = FILE_OPEN_ERROR;
+        m_error_code = FILE_OPEN_ERROR;
         in_file.clear();
 		return false;
 	}
@@ -79,8 +81,8 @@ bool HexParsing::Convert()
 			i_char_num++;
 		}
 		if (i_char_num < 11) {
-			error_code = FILE_LINE_ERROR;
-			error_rec = line_number;
+            m_error_code = FILE_LINE_ERROR;
+            m_error_rec = line_number;
 			return false;
 		}
 
@@ -91,7 +93,7 @@ bool HexParsing::Convert()
 				if (CheckData(&line_data)) {
 					if (0x0 == line_data.l_type) {  //映射数据
 						if (!MappedData(&line_data, &addr_t)) {
-							error_rec = line_number;
+                            m_error_rec = line_number;
 							return false;
 						}
                     } else if (0x04 == line_data.l_type) {  //切换高位地址
@@ -100,22 +102,22 @@ bool HexParsing::Convert()
 						file_end_flag = 1;
 						break;
                     } else {
-						error_code = FILE_LINE_TYPE_ERROR;
-						error_rec = line_number;
+                        m_error_code = FILE_LINE_TYPE_ERROR;
+                        m_error_rec = line_number;
 						return false;
 					}
                 } else {
-					error_code = FILE_LINE_CHECK_ERROR;
-					error_rec = line_number;
+                    m_error_code = FILE_LINE_CHECK_ERROR;
+                    m_error_rec = line_number;
 					return false;
 				}
             } else {
-				error_rec = line_number;
+                m_error_rec = line_number;
 				return false;
 			}
         } else {
-			error_code = FILE_LINE_ERROR;
-			error_rec = line_number;
+            m_error_code = FILE_LINE_ERROR;
+            m_error_rec = line_number;
 			return false;
 		}
 
@@ -129,8 +131,8 @@ bool HexParsing::Convert()
 	if (file_end_flag) {
 		return true;
     } else {
-		error_code = FILE_NOEND_ERROR;
-		error_rec = line_number;
+        m_error_code = FILE_NOEND_ERROR;
+        m_error_rec = line_number;
 		return false;
 	}
 }
@@ -144,36 +146,36 @@ bool HexParsing::Convert()
 string HexParsing::GetErrorMsg()
 {
 	string msg = "";
-	switch (error_code) {
+    switch (m_error_code) {
 	case FILE_OPEN_ERROR:
 		msg = "文件打开失败";
 		break;
 	case FILE_LINE_ERROR:
-		msg = "第" + std::to_string(error_rec) + "行, 行数据错误";
+        msg = "第" + std::to_string(m_error_rec) + "行, 行数据错误";
 		break;
 	case LINE_DATA_LENGTH_ERROR:
-		msg = "第" + std::to_string(error_rec) + "行, 数据转换错误, 数据长度超过范围";
+        msg = "第" + std::to_string(m_error_rec) + "行, 数据转换错误, 数据长度超过范围";
 		break;
 	case FILE_ILLEGAL_CHAR_ERROR:
-		msg = "第" + std::to_string(error_rec) + "行, 数据转换错误, 非法字符";
+        msg = "第" + std::to_string(m_error_rec) + "行, 数据转换错误, 非法字符";
 		break;
 	case FILE_LINE_CHECK_ERROR:
-		msg = "第" + std::to_string(error_rec) + "行, 数据校验错误";
+        msg = "第" + std::to_string(m_error_rec) + "行, 数据校验错误";
 		break;
 	case FILE_LINE_TYPE_ERROR:
-		msg = "第" + std::to_string(error_rec) + "行, 数据类型错误";
+        msg = "第" + std::to_string(m_error_rec) + "行, 数据类型错误";
 		break;
 	case FILE_NOEND_ERROR:
 		msg = "hex文件无结束行";
 		break;
 	case ADDRESS_OUT_OF_RANGE:
-		msg = "第" + std::to_string(error_rec) + "行, 地址越界";
+        msg = "第" + std::to_string(m_error_rec) + "行, 地址越界";
 		break;
     case ADDRESS_LENGTH_ILLEGAL:
         msg = "地址长度非法";
         break;
 	case VECTOR_OUT_OF_RANGE:
-		msg = "第" + std::to_string(error_rec) + "行, vector越界";
+        msg = "第" + std::to_string(m_error_rec) + "行, vector越界";
 		break;
 	}
     return msg;
@@ -181,12 +183,17 @@ string HexParsing::GetErrorMsg()
 
 unsigned int HexParsing::GetAddrLength()
 {
-    return this->len;
+    return this->m_len;
 }
 
 Addr HexParsing::GetOriginAddr()
 {
-    return this->addr_origin;
+    return this->m_addr_origin;
+}
+
+Addr HexParsing::GetEndAddr()
+{
+    return this->m_addr_end;
 }
 
 /**
@@ -194,9 +201,9 @@ Addr HexParsing::GetOriginAddr()
  * 
  * @return 转换后的数据vector
  */
-vector<unsigned short int> HexParsing::GetDataMap()
+vector<unsigned short> HexParsing::GetDataMap()
 {
-	return data_vec;
+    return m_data_vec;
 }
 
 /**
@@ -216,24 +223,24 @@ vector<unsigned short int> HexParsing::GetDataMap()
 bool HexParsing::MappedData(PLineForm data, PAddr addr)
 {
 	addr->addr_16.addr_l = data->l_addr;
-	if ((addr->addr_32 < addr_origin.addr_32)
-		|| (addr->addr_32 > addr_end.addr_32)) {
-		error_code = ADDRESS_OUT_OF_RANGE;
+    if ((addr->addr_32 < m_addr_origin.addr_32)
+        || (addr->addr_32 > m_addr_end.addr_32)) {
+        m_error_code = ADDRESS_OUT_OF_RANGE;
 		return false;
 	}
 
-	unsigned int distance = addr->addr_32 - addr_origin.addr_32;
+    unsigned int distance = addr->addr_32 - m_addr_origin.addr_32;
 
     for (unsigned int i = 0; i < data->l_len; ++i) {
 		try {
-			data_vec.at(distance + i) = data->l_data[i];
+            m_data_vec.at(distance + i) = data->l_data[i];
 		}
 		catch (const std::out_of_range& oor) {
-			error_code = VECTOR_OUT_OF_RANGE;
+            m_error_code = VECTOR_OUT_OF_RANGE;
 			break;
 		}
 	}
-	if (error_code)
+    if (m_error_code)
 		return false;
 	return true;
 }
@@ -286,7 +293,7 @@ bool HexParsing::CharBuffer2HexData(char* buf, PLineForm data)
 {
 	data->l_len = Char2IntByte(buf[1], buf[2]);  //数据长度
 	if (data->l_len > 0x20) {
-		error_code = LINE_DATA_LENGTH_ERROR;
+        m_error_code = LINE_DATA_LENGTH_ERROR;
 		return false;
 	}
 	data->l_len = data->l_len / 2;  //按16位(2字节)长度计算
@@ -302,7 +309,7 @@ bool HexParsing::CharBuffer2HexData(char* buf, PLineForm data)
 	// 转换校验值
 	data->l_check = Char2IntByte(buf[j], buf[j + 1]);
 
-	if (error_code)
+    if (m_error_code)
 		return false;  //出现非法字符
 	else
 		return true;
@@ -319,9 +326,9 @@ bool HexParsing::CharBuffer2HexData(char* buf, PLineForm data)
  * 
  * @return 16位的short int
  */
-unsigned short int HexParsing::Char2ShortInt(char d_4, char d_3, char d_2, char d_1)
+unsigned short HexParsing::Char2ShortInt(char d_4, char d_3, char d_2, char d_1)
 {
-    return static_cast<unsigned short int>((Char2Int(d_4) << 12 | Char2Int(d_3) << 8 | Char2Int(d_2) << 4 | Char2Int(d_1)));
+    return static_cast<unsigned short>((Char2Int(d_4) << 12 | Char2Int(d_3) << 8 | Char2Int(d_2) << 4 | Char2Int(d_1)));
 }
 
 /**
@@ -333,9 +340,9 @@ unsigned short int HexParsing::Char2ShortInt(char d_4, char d_3, char d_2, char 
  * 
  * @return short int 低8位有效
  */
-unsigned short int HexParsing::Char2IntByte(char d_h, char d_l)
+unsigned short HexParsing::Char2IntByte(char d_h, char d_l)
 {
-    return static_cast<unsigned short int>((Char2Int(d_h) << 4 | Char2Int(d_l)));
+    return static_cast<unsigned short>((Char2Int(d_h) << 4 | Char2Int(d_l)));
 }
 
 /**
@@ -348,9 +355,9 @@ unsigned short int HexParsing::Char2IntByte(char d_h, char d_l)
  * @error
  *   FILE_ILLEGAL_CHAR_ERROR  数据转换错误, 非法字符
  */
-unsigned short int HexParsing::Char2Int(char ch)
+unsigned short HexParsing::Char2Int(char ch)
 {
-	unsigned short int t;
+    unsigned short t;
 	switch (ch) {
 	case '0':
 		t = 0x0;
@@ -401,7 +408,7 @@ unsigned short int HexParsing::Char2Int(char ch)
 		t = 0xF;
 		break;
 	default:
-		error_code = FILE_ILLEGAL_CHAR_ERROR;
+        m_error_code = FILE_ILLEGAL_CHAR_ERROR;
 		t = 0;
 	}
 	return t;
@@ -409,40 +416,17 @@ unsigned short int HexParsing::Char2Int(char ch)
 
 /**
  * Prepare  转换准备
- *   当使用默认构造函数创建对象时，在执行Convert()函数之前需要设置：
- *     1. SetFilePathName(...)
- *     2. SetOrigin_Address(...)
- *     3. SetAddrLength(...)
- *     4. Prepare()
+ *   当使用默认构造函数创建对象时，在执行Convert()函数之前需要调用此函数进行参数设置。
  *   如果采用带参数的构造函数，则不需要进行上述设置。
  */
-void HexParsing::Prepare()
+void HexParsing::SetParameters(string file_path_name, unsigned int origin_address,
+                         unsigned int addr_length)
 {
-	addr_end.addr_32 = this->addr_origin.addr_32 + this->len;
+    this->m_file = file_path_name;
+    this->m_addr_origin.addr_32 = origin_address;
+    this->m_len = addr_length;
+    this->m_addr_end.addr_32 = origin_address + addr_length;
 	//设置数据vector大小，并全部初始化为1
-	data_vec.resize(this->len, 0xFFFF);
+    m_data_vec.resize(addr_length, 0xFFFF);
 }
 
-/**
- * SetFilePathName  设置hex文件的路径及名称
- */
-void HexParsing::SetFilePathName(string file_path_name)
-{
-    this->file = file_path_name;
-}
-
-/**
- * SetOrigin_Address  设置转换数据的起始地址
- */
-void HexParsing::SetOrigin_Address(unsigned int origin_address)
-{
-    this->addr_origin.addr_32 = origin_address;
-}
-
-/**
- * SetAddrLength  设置地址长度
- */
-void HexParsing::SetAddrLength(unsigned int addr_length)
-{
-    this->len = addr_length;
-}

@@ -1,8 +1,6 @@
 #ifndef UPGRADEPROC_H
 #define UPGRADEPROC_H
 
-#include <QMainWindow>
-
 #include <string>
 #include <vector>
 using std::string;
@@ -10,16 +8,14 @@ using std::vector;
 
 #include "hexparsing.h"
 #include "canfunc.h"
-
-namespace Ui {
-class MainWindow;
-}
+#include "message.h"
 
 class UpgradeProc
 {
 public:
     UpgradeProc();
-    UpgradeProc(Ui::MainWindow *main_ui);
+    UpgradeProc(unsigned short blockSize);
+    UpgradeProc(Message* msg, unsigned short blockSize);
     ~UpgradeProc();
 
     bool Process();
@@ -44,19 +40,20 @@ private:
         receiveWait = 0x1B
     }Flow;
 
-    Ui::MainWindow *ui;
-
-    vector<unsigned short> data;
     HexParsing* hex_parsing;
     CanFunc* can_func;
-    unsigned short int data_block_size;
-    unsigned int error_code;
+    Message* message;
+
+    vector<unsigned short> m_flash_data;
+    unsigned short int m_datablock_size;
+    unsigned int m_error_code;
 
     // can struct
-    VCI_CAN_OBJ can_data_struct;  //CAN数据结构
-    vector<unsigned char> can_data;  //CAN数据
+    VCI_CAN_OBJ m_candata_struct;  //CAN数据结构
+    vector<unsigned char> m_can_data;  //CAN数据
 
     bool CanSendData();
+    bool CanSendFlashData();
     bool CanSendCmdData(Flow flow);
     bool CanReceiveData();
 };
