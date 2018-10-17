@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QString>
 
+#include "upgradework.h"
+#include "qmsginfo.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -11,7 +14,6 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -20,11 +22,14 @@ public:
 
 private slots:
     void on_select_button_clicked();
-
     void on_upgrade_button_clicked();
+
+    void ShowResultMsg(bool result);
 
 private:
     Ui::MainWindow *ui;
+    UpgradeWork* upgrade_work;
+    QMsgInfo* msg;
 };
 
 #endif // MAINWINDOW_H

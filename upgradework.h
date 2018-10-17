@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QString>
 
+#include "qmsginfo.h"
 #include "upgrade_ctrl/upgradeproc.h"
 
 class UpgradeWork : public QThread
@@ -13,14 +14,17 @@ public:
     explicit UpgradeWork(QObject *parent = nullptr);
     virtual void run();
 
+    void SetFilePathName(QString file_path);
+
+    void setQmsg(QMsgInfo *value);
+
 signals:
-    void TextAppend(QString msg);
-    void ScrollValueChanged(int value);
-    void ReturnResult(bool tf);
+    void ReturnResult(bool result);
 
 private:
     UpgradeProc* upgrade_proc;
     QString file_path_name;
+    QMsgInfo* qmsg;
 };
 
 #endif // UPGRADEWORK_H

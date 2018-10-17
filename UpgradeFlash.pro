@@ -31,9 +31,9 @@ SOURCES += \
     upgrade_ctrl/crc16.cpp \
     upgrade_ctrl/hexparsing.cpp \
     upgrade_ctrl/message.cpp \
-    upgrade_ctrl/qmsg.cpp \
     upgrade_ctrl/upgradeproc.cpp \
-    upgradework.cpp
+    upgradework.cpp \
+    qmsginfo.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -42,9 +42,9 @@ HEADERS += \
     upgrade_ctrl/crc16.h \
     upgrade_ctrl/hexparsing.h \
     upgrade_ctrl/message.h \
-    upgrade_ctrl/qmsg.h \
     upgrade_ctrl/upgradeproc.h \
-    upgradework.h
+    upgradework.h \
+    qmsginfo.h
 
 FORMS += \
         mainwindow.ui

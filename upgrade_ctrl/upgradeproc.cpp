@@ -46,10 +46,16 @@ bool UpgradeProc::Process()
     unsigned short crc_value = 0;  //CRC16校验值
     Addr addr_origin = hex_parsing->GetOriginAddr();  //起始地址
     Addr addr_end = hex_parsing->GetEndAddr();  //结束长度
+    unsigned int addr_len = hex_parsing->GetAddrLength();
     Addr addr = addr_origin;  //数据地址
     Flow upgrade_flow = handshake;
     Flow check_flow = handshake;
     m_error_code = 0;
+    int handshake_flag = 0;  //握手成功标志
+
+    int progress_value = 1;  //进度值
+    int sum_datablock = addr_len / this->m_datablock_size;
+    int progress_added = 100 / (sum_datablock + 8);  //进度增加值
 
     /*
      *  1. 解析Hex文件
@@ -77,17 +83,15 @@ bool UpgradeProc::Process()
         switch (upgrade_flow) {
         case handshake:
             //发送握手指令
-            if(CanSendCmdData(handshake)) {
-//                message->Cout("CAN发送失败");
-//                return false;
-                upgrade_flow = receiveWait;
-            } else {
-                upgrade_flow = handshake;
+            if(0 == handshake_flag) {
+                if(CanSendCmdData(handshake)) {
+                }
             }
             check_flow = handshake;
             break;
         case unlockCSM:
             message->Cout("开始升级...");
+            message->ProgressValue(progress_value);
             //发送解锁指令
             if(!CanSendCmdData(unlockCSM)) {
                 message->Cout("CAN发送失败");
@@ -145,7 +149,8 @@ bool UpgradeProc::Process()
                 return false;
             }
 
-            message->Cout("发送第" + std::to_string(num_datablock) +"块数据信息-->");
+            message->Cout("发送第 " + std::to_string(num_datablock) + "/" +
+                          std::to_string(sum_datablock) +" 块数据信息-->");
             check_flow = dataBlockInfo;
             upgrade_flow = receiveWait;
             break;
@@ -236,21 +241,23 @@ bool UpgradeProc::Process()
             case handshake:
                 if(check_flow == handshake) {
                     if(0x55 == m_can_data.at(1)) {
+                        handshake_flag = 1;
                         message->Cout("  进入升级程序");
+                        progress_value += progress_added;
+                        message->ProgressValue(progress_value);
                     } else {
                         message->Cout("  握手命令回复失败");
                         return false;
                     }
                     upgrade_flow = unlockCSM;
-                } else {
-                    message->Cout("  握手命令回复错位 " + std::to_string(check_flow));
-                    return false;
                 }
                 break;
             case unlockCSM:
                 if(check_flow == unlockCSM) {
                     if(0x55 == m_can_data.at(1)) {
                         message->Cout("  CSM解锁成功");
+                        progress_value += progress_added;
+                        message->ProgressValue(progress_value);
                     } else {
                         message->Cout("  CSM解锁失败");
                         return false;
@@ -265,6 +272,8 @@ bool UpgradeProc::Process()
                 if(check_flow == toggle) {
                     if(0x55 == m_can_data.at(1)) {
                         message->Cout("  Toggle测试成功");
+                        progress_value += progress_added;
+                        message->ProgressValue(progress_value);
                     } else {
                         message->Cout("  Toggle测试失败");
                         return false;
@@ -279,6 +288,8 @@ bool UpgradeProc::Process()
                 if(check_flow == version) {
                     if(0x210 == (m_can_data.at(1) + (m_can_data.at(2) << 8))) {
                         message->Cout("  DSP Flash API版本正确: 0x210");
+                        progress_value += progress_added;
+                        message->ProgressValue(progress_value);
                     } else {
                         message->Cout("  DSP Flash API版本错误: " +
                                  std::to_string(m_can_data.at(1) + (m_can_data.at(2) << 8)));
@@ -294,6 +305,8 @@ bool UpgradeProc::Process()
                 if(check_flow == erase) {
                     if(0x55 == m_can_data.at(1)) {
                         message->Cout("  Flash擦除成功");
+                        progress_value += progress_added;
+                        message->ProgressValue(progress_value);
                     } else {
                         message->Cout("  Flash擦除失败");
                         return false;
@@ -323,11 +336,11 @@ bool UpgradeProc::Process()
                 if(check_flow == flashData) {
                     if((num_flash_data - num_block_start) != static_cast<unsigned int>(m_can_data.at(1) + (m_can_data.at(2) << 8))) {
                         message->Cout("  丢失" + std::to_string((num_flash_data - num_block_start) - static_cast<unsigned int>(m_can_data.at(2) + (m_can_data.at(3) << 8))) +"个数据");
-                        //return false;
+                        return false;
                     } else {
                         message->Cout("  数据发送完成");
+                        upgrade_flow = checkSum;
                     }
-                    upgrade_flow = checkSum;
                 } else {
                     message->Cout("  数据信息回复错位" + std::to_string(check_flow));
                     return false;
@@ -366,6 +379,8 @@ bool UpgradeProc::Process()
                 if(check_flow == verify) {
                     if(0x55 == m_can_data.at(1)) {
                         message->Cout("  Flash校验成功");
+                        progress_value += progress_added;
+                        message->ProgressValue(progress_value);
                     } else {
                         message->Cout("  Flash校验失败");
                         return false;
@@ -385,8 +400,10 @@ bool UpgradeProc::Process()
                 if(check_flow == resetDSP) {
                     if(0x55 == m_can_data.at(1)) {
                         message->Cout("  DSP正在复位...");
+                        message->ProgressValue(100);
                     } else {
                         message->Cout("  DSP复位失败");
+                        message->ProgressValue(0);
                         return false;
                     }
                 } else {

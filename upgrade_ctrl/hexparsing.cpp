@@ -196,11 +196,6 @@ Addr HexParsing::GetEndAddr()
     return this->m_addr_end;
 }
 
-Addr HexParsing::GetEndAddr()
-{
-    return this->addr_end;
-}
-
 /**
  * GetDataMap  返回转换后的数据序列
  * 
