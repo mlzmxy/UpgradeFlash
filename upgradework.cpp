@@ -11,7 +11,7 @@ UpgradeWork::UpgradeWork(QObject *parent) :
 
 void UpgradeWork::run()
 {
-    UpgradeProc proc(qmsg, 0x200);
+    UpgradeProc proc(qmsg, 0x800);
     proc.SetHexParseSettings(this->file_path_name.toStdString(), 0x318000, 0x18000);
     bool result = proc.Process();
     emit ReturnResult(result);

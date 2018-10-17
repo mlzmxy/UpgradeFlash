@@ -28,16 +28,15 @@ private:
     typedef enum {  //flash升级流程
         handshake = 0x10,
         unlockCSM = 0x11,
-        toggle = 0x12,
-        version = 0x13,
-        erase = 0x14,
-        dataBlockInfo = 0x15,
-        flashData = 0x16,
-        checkSum = 0x17,
-        program = 0x18,
-        verify = 0x19,
-        resetDSP = 0x1A,
-        receiveWait = 0x1B
+        version = 0x12,
+        erase = 0x13,
+        dataBlockInfo = 0x14,
+        flashData = 0x15,
+        checkSum = 0x16,
+        program = 0x17,
+        verify = 0x18,
+        resetDSP = 0x19,
+        receiveWait = 0x1A
     }Flow;
 
     HexParsing* hex_parsing;
