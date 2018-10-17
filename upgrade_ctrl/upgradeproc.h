@@ -36,8 +36,9 @@ private:
         checkSum = 0x17,
         program = 0x18,
         verify = 0x19,
-        resetDSP = 0x1A,
-        receiveWait = 0x1B
+        changeUpdateFlag = 0x1A,
+        resetDSP = 0x1B,
+        receiveWait = 0x1C
     }Flow;
 
     HexParsing* hex_parsing;
