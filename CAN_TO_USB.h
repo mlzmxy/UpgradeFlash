@@ -27,7 +27,7 @@ History       :
 #ifndef CAN_TO_USB_H
 #define CAN_TO_USB_H
 
-#include "windows.h"
+#include <windows.h>
 
 //1.定义初始化CAN的数据类型
 typedef struct _VCI_INIT_CONFIG

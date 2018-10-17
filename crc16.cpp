@@ -58,26 +58,12 @@ static const unsigned short crc16tab[256]= {
  *
  * @return 计算得到的校验值
  */
-unsigned short crc16(const char *buf, int len)
+unsigned short Crc16(const char *buf, int len)
 {
     int counter;
     unsigned short crc = 0;
     for (counter = 0; counter < len; counter++)
         crc = ((crc << 8) & 0xFFFF) ^ crc16tab[((crc >> 8) ^ *buf++) & 0x00FF];
-    return crc;
-}
-
-unsigned short CrcOf4Char(const unsigned char ch1, const unsigned char ch2, const unsigned char ch3, const unsigned char ch4)
-{
-    int counter;
-    unsigned char buf[4];
-    buf[0] = ch1;
-    buf[1] = ch2;
-    buf[2] = ch3;
-    buf[3] = ch4;
-    unsigned short crc = 0;
-    for (counter = 0; counter < 4; counter++)
-        crc = ((crc << 8) & 0xFFFF) ^ crc16tab[((crc >> 8) ^ buf[counter]) & 0x00FF];
     return crc;
 }
 

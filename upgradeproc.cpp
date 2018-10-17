@@ -36,7 +36,6 @@ bool UpgradeProc::Process()
     unsigned int data_block_num = 1;  //发送数据块计数
     unsigned int num_datablock_start = 0;  //数据块起始数据在vector中的位置
     unsigned int num_16bit_data = 0;  //flash数据计数
-    unsigned int tmp_num_16bit_data = 0;  //备份
     unsigned short crc_value = 0;  //CRC16校验值
     int progress_bar_value = 0;  //进度条数值
     int bar_value_added = (hex_parsing->GetAddrLength() / this->data_block_size) / 90;
