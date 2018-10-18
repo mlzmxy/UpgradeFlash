@@ -1,7 +1,6 @@
 #include "upgradeproc.h"
 #include "crc16.h"
 
-
 UpgradeProc::UpgradeProc() :
     hex_parsing(new HexParsing),
     can_func(new CanFunc),
@@ -22,10 +21,11 @@ UpgradeProc::UpgradeProc(unsigned short blockSize) :
     m_can_data.resize(8);
 }
 
-UpgradeProc::UpgradeProc(Message* msg, unsigned short blockSize) :
+UpgradeProc::UpgradeProc(Message* msg, EraseSector sector, unsigned short blockSize) :
     hex_parsing(new HexParsing),
     can_func(new CanFunc),
     message(msg),
+    sectors(sector),
     m_datablock_size(blockSize),
     m_error_code(0)
 {
@@ -48,80 +48,51 @@ bool UpgradeProc::Process()
     Addr addr_end = hex_parsing->GetEndAddr();  //结束长度
     unsigned int addr_len = hex_parsing->GetAddrLength();
     Addr addr = addr_origin;  //数据地址
-    Flow upgrade_flow = receiveWait;
-    Flow check_flow = handshake;
+    Flow upgrade_flow = unlockCSM;
+    Flow check_flow = unlockCSM;
     m_error_code = 0;
-    //int handshake_flag = 0;  //握手成功标志
 
-    int progress_value = 0;  //进度值
+    int progress_value = 1;  //进度值
     int sum_datablock = addr_len / this->m_datablock_size;
     int progress_added = 100 / sum_datablock;  //进度增加值
 
-    /*
-     *  1. 解析Hex文件
-     */
-    if(hex_parsing->Convert()) {
-        this->m_flash_data = hex_parsing->GetDataMap();
-        message->Cout("Hex文件解析成功");
-    } else {
-        message->Cout(hex_parsing->GetErrorMsg());
-        return false;
-    }
-
-    /*
-     *  2. 打开并初始化CAN设备
-     */
-    if(can_func->OpenAndInitDevice()) {
-        message->Cout("CAN设备初始化完成");
-    } else {
-        message->Cout(can_func->GetErrorMsg());
-        return false;
-    }
-
-    message->Cout("等待进入升级程序-->");
-    while(1) {
+    while(true) {
         switch (upgrade_flow) {
         case handshake:
-            //发送握手指令
-            //if(0 == handshake_flag) {
-                if(CanSendCmdData(handshake)) {
-                    upgrade_flow = receiveWait;  //被动式握手
-                } else {
-                    message->Cout("CAN发送失败");
-                    return false;
-                }
-            //}
-            check_flow = handshake;
             break;
         case unlockCSM:
-            message->Cout("开始升级...");
+            message->Cout("等待CSM解锁-->");
             message->ProgressValue(progress_value);
             //发送解锁指令
             if(!CanSendCmdData(unlockCSM)) {
-                message->Cout("CAN发送失败");
                 return false;
             }
-            message->Cout("等待CSM解锁-->");
             check_flow = unlockCSM;
             upgrade_flow = receiveWait;
             break;
         case version:
+            message->Cout("检查Flash API版本-->");
             //发送version指令
             if(!CanSendCmdData(version)) {
-                message->Cout("CAN发送失败");
                 return false;
             }
-            message->Cout("检查Flash API版本-->");
             check_flow = version;
             upgrade_flow = receiveWait;
             break;
         case erase:
+            message->Cout("等待Flash擦除-->");
             //发送擦除指令
-            if(!CanSendCmdData(erase)) {
-                message->Cout("CAN发送失败");
+            m_can_data.at(0) = erase;
+            m_can_data.at(1) = 0;
+            m_can_data.at(2) = this->sectors;
+            m_can_data.at(3) = 0;
+            m_can_data.at(4) = 0;
+            m_can_data.at(5) = 0;
+            m_can_data.at(6) = 0;
+            m_can_data.at(7) = 0;
+            if(!CanSendData()) {
                 return false;
             }
-            message->Cout("等待Flash擦除-->");
             check_flow = erase;
             upgrade_flow = receiveWait;
             break;
@@ -129,6 +100,8 @@ bool UpgradeProc::Process()
             num_block_start = (num_datablock - 1) * this->m_datablock_size;
             num_flash_data = num_block_start;
             addr.addr_32 = addr_origin.addr_32 + (num_datablock - 1) * this->m_datablock_size;
+            message->Cout("发送第 " + std::to_string(num_datablock) + "/" +
+                          std::to_string(sum_datablock) +" 块数据信息-->");
             //发送数据块信息
             m_can_data.at(0) = dataBlockInfo;
             m_can_data.at(1) = 0;
@@ -139,18 +112,13 @@ bool UpgradeProc::Process()
             m_can_data.at(6) = this->m_datablock_size & 0x00FF;        //数据块大小低位
             m_can_data.at(7) = (this->m_datablock_size >> 8) & 0x00FF; //数据块大小高位
             if(!CanSendData()) {
-                message->Cout("CAN发送失败");
                 return false;
             }
-
-            message->Cout("发送第 " + std::to_string(num_datablock) + "/" +
-                          std::to_string(sum_datablock) +" 块数据信息-->");
             check_flow = dataBlockInfo;
             upgrade_flow = receiveWait;
             break;
         case flashData:
             //发送数据
-            //message->Cout("  正在发送数据...");
             while ((num_flash_data - num_block_start) < this->m_datablock_size) {
                 if((num_flash_data + 3) < m_flash_data.capacity()) {
                     m_can_data.at(0) = m_flash_data.at(num_flash_data) & 0x00FF;
@@ -165,13 +133,12 @@ bool UpgradeProc::Process()
                     message->Cout("读取vector数据越界");
                 }
                 if(!CanSendFlashData()) {
-                    message->Cout("CAN发送失败");
                     return false;
                 }
             }
 
+            //数据发送结束后，发送一条命令帧
             if(!CanSendCmdData(flashData)) {
-                message->Cout("CAN发送失败");
                 return false;
             }
             check_flow = flashData;
@@ -189,37 +156,30 @@ bool UpgradeProc::Process()
             m_can_data.at(6) = 0;
             m_can_data.at(7) = 0;
             if(!CanSendData()) {
-                message->Cout("CAN发送失败");
                 return false;
             }
-            //message->Cout("第" + std::to_string(num_datablock) +"块数据校验-->");
             check_flow = checkSum;
             upgrade_flow = receiveWait;
             break;
         case program:
             //发送program指令
             if(!CanSendCmdData(program)) {
-                message->Cout("CAN发送失败");
                 return false;
             }
-            //message->Cout(QString("第" + std::to_string(num_datablock) +"块数据烧写-->"));
             check_flow = program;
             upgrade_flow = receiveWait;
             break;
         case verify:
             //发送校验指令
             if(!CanSendCmdData(verify)) {
-                message->Cout("CAN发送失败");
                 return false;
             }
-            //message->Cout(QString("第" + std::to_string(num_datablock) +"块数据烧写校验-->"));
             check_flow = verify;
             upgrade_flow = receiveWait;
             break;
         case resetDSP:
             //发送复位指令
             if(!CanSendCmdData(resetDSP)) {
-                message->Cout("CAN发送失败");
                 return false;
             }
             message->Cout("发送重启DSP指令-->");
@@ -232,18 +192,6 @@ bool UpgradeProc::Process()
 
         if(CanReceiveData()) {
             switch(m_can_data.at(0)) {
-            case handshake:
-                if(check_flow == handshake) {
-                    if(0x55 == m_can_data.at(1)) {
-                        //handshake_flag = 1;
-                        upgrade_flow = unlockCSM;
-                        message->Cout("  进入升级程序");
-                    } else {
-                        upgrade_flow = handshake;
-                        //message->Cout("  握手命令回复失败");
-                    }
-                }
-                break;
             case unlockCSM:
                 if(check_flow == unlockCSM) {
                     if(0x55 == m_can_data.at(1)) {
@@ -276,10 +224,10 @@ bool UpgradeProc::Process()
             case erase:
                 if(check_flow == erase) {
                     if(0x55 == m_can_data.at(1)) {
-                        message->Cout("  Flash CDE擦除成功");
+                        message->Cout("  Flash擦除成功");
                         message->ProgressValue(++progress_value);
                     } else {
-                        message->Cout("  Flash CDE擦除失败");
+                        message->Cout("  Flash擦除失败");
                         return false;
                     }
                     upgrade_flow = dataBlockInfo;
@@ -306,8 +254,11 @@ bool UpgradeProc::Process()
             case flashData:
                 if(check_flow == flashData) {
                     if((num_flash_data - num_block_start) != static_cast<unsigned int>(m_can_data.at(1) + (m_can_data.at(2) << 8))) {
-                        message->Cout("  丢失" + std::to_string((num_flash_data - num_block_start) - static_cast<unsigned int>(m_can_data.at(2) + (m_can_data.at(3) << 8))) +"个数据");
-                        return false;
+                        message->Cout("  丢失" + std::to_string((num_flash_data - num_block_start) -
+                                      static_cast<unsigned int>(m_can_data.at(2) + (m_can_data.at(3) << 8))) +"个数据, 重新发送");
+                        //return false;
+                        num_flash_data = num_block_start;
+                        upgrade_flow = dataBlockInfo;
                     } else {
                         message->Cout("  数据发送完成");
                         upgrade_flow = checkSum;
@@ -387,21 +338,71 @@ bool UpgradeProc::Process()
     }
 }
 
-bool UpgradeProc::ParseHexFile()
+
+/**
+ * @brief UpgradeProc::ParseHexFile
+ *   第一步. 解析Hex文件
+ *
+ * @param file
+ * @param origin_addr
+ * @param addr_len
+ * @return
+ */
+bool UpgradeProc::ParseHexFile(std::string file,
+                               unsigned int origin_addr, unsigned int addr_len)
 {
+    message->Cout("解析Hex文件");
+    hex_parsing->SetParameters(file, origin_addr, addr_len);
     if(hex_parsing->Convert()) {
         this->m_flash_data = hex_parsing->GetDataMap();
+        message->Cout("  Hex文件解析成功");
+        return true;
     } else {
-        m_error_code = ERROR_HEXPARSING;
+        message->Cout(hex_parsing->GetErrorMsg());
         return false;
     }
-    return true;
 }
 
-void UpgradeProc::SetHexParseSettings(std::string file,
-                                      unsigned int origin_addr, unsigned int addr_len)
+/**
+ * @brief UpgradeProc::InitCAN
+ *
+ *    第二步. 打开并初始化CAN设备
+ *
+ * @return
+ */
+bool UpgradeProc::InitCAN()
 {
-    hex_parsing->SetParameters(file, origin_addr, addr_len);
+    message->Cout("打开并初始化CAN设备");
+    if(can_func->OpenAndInitDevice()) {
+        message->Cout("  CAN设备初始化完成");
+        return true;
+    } else {
+        message->Cout(can_func->GetErrorMsg());
+        return false;
+    }
+}
+
+/**
+ * @brief UpgradeProc::WaitForUpgrade
+ *
+ * 第三步. 等待握手
+ */
+void UpgradeProc::WaitForUpgrade()
+{
+    message->Cout("等待进入升级程序...");
+    while(true) {
+        //等待底层程序发送升级命令，两次握手后结束循环
+        if(CanReceiveData()) {
+            if(handshake == m_can_data.at(0)) {
+                if(0x55 == m_can_data.at(1)) {
+                    message->Cout("进入升级程序, 开始升级");
+                    break;
+                } else if(0 == m_can_data.at(1)) {
+                    CanSendCmdData(handshake);
+                }
+            }
+        }
+    }
 }
 
 bool UpgradeProc::CanSendData()
@@ -423,7 +424,7 @@ bool UpgradeProc::CanSendData()
     if(can_func->Transmit(Dev_Index, Can_Index_1, &m_candata_struct)) {
         return true;
     } else {
-        m_error_code = ERROR_CAN_SEND_FAILED;
+        message->Cout("CAN发送失败");
         return false;
     }
 }
@@ -447,7 +448,7 @@ bool UpgradeProc::CanSendFlashData()
     if(can_func->Transmit(Dev_Index, Can_Index_1, &m_candata_struct)) {
         return true;
     } else {
-        m_error_code = ERROR_CAN_SEND_FAILED;
+        message->Cout("CAN发送失败");
         return false;
     }
 }
@@ -486,20 +487,5 @@ bool UpgradeProc::CanReceiveData()
         }
     }
     return false;
-}
-
-string UpgradeProc::GetErrorMsg()
-{
-    string msg = "";
-    switch(m_error_code)
-    {
-    case ERROR_CANFUNC:
-        msg = can_func->GetErrorMsg();
-        break;
-    case ERROR_HEXPARSING:
-        msg = hex_parsing->GetErrorMsg();
-        break;
-    }
-    return msg;
 }
 

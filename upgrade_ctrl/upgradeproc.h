@@ -10,19 +10,24 @@ using std::vector;
 #include "canfunc.h"
 #include "message.h"
 
+
 class UpgradeProc
 {
 public:
+    enum EraseSector{
+        AppProgram = 0,
+        LocalProgram = 1
+    };
+
     UpgradeProc();
     UpgradeProc(unsigned short blockSize);
-    UpgradeProc(Message* msg, unsigned short blockSize);
+    UpgradeProc(Message* msg, EraseSector sector,unsigned short blockSize);
     ~UpgradeProc();
 
+    bool InitCAN();
+    bool ParseHexFile(string file,unsigned int origin_addr, unsigned int addr_len);
+    void WaitForUpgrade();
     bool Process();
-    bool ParseHexFile();
-    void SetHexParseSettings(string file,unsigned int origin_addr, unsigned int addr_len);
-
-    string GetErrorMsg();
 
 private:
     typedef enum {  //flash升级流程
@@ -43,8 +48,9 @@ private:
     CanFunc* can_func;
     Message* message;
 
+    EraseSector sectors;
     vector<unsigned short> m_flash_data;
-    unsigned short int m_datablock_size;
+    unsigned short m_datablock_size;
     unsigned int m_error_code;
 
     // can struct
@@ -56,10 +62,5 @@ private:
     bool CanSendCmdData(Flow flow);
     bool CanReceiveData();
 };
-
-#define ERROR_CANFUNC    0x01         //CanFunc错误
-#define ERROR_HEXPARSING 0x02         //HexParsing错误
-#define ERROR_CAN_SEND_FAILED  0x03   //Can消息发送失败
-#define ERROR_RECMD_DISLOCATION 0x04  //命令反馈错位
 
 #endif // UPGRADEPROC_H

@@ -23,6 +23,7 @@ public:
 private slots:
     void on_select_button_clicked();
     void on_upgrade_button_clicked();
+    void on_upgrade_local_button_clicked();
 
     void ShowResultMsg(bool result);
 

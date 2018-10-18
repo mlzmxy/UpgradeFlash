@@ -20,37 +20,37 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
+   <property name="maximumSize">
+    <size>
+     <width>600</width>
+     <height>440</height>
+    </size>
+   </property>
    <widget class="QSplitter" name="splitter_2">
     <property name="geometry">
      <rect>
       <x>20</x>
       <y>20</y>
       <width>560</width>
-      <height>380</height>
+      <height>400</height>
      </rect>
     </property>
     <property name="minimumSize">
      <size>
       <width>560</width>
-      <height>380</height>
+      <height>400</height>
      </size>
     </property>
     <property name="maximumSize">
      <size>
-      <width>306</width>
-      <height>16777215</height>
+      <width>560</width>
+      <height>400</height>
      </size>
     </property>
     <property name="orientation">
      <enum>Qt::Vertical</enum>
     </property>
     <widget class="QSplitter" name="splitter">
-     <property name="maximumSize">
-      <size>
-       <width>306</width>
-       <height>40</height>
-      </size>
-     </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -65,6 +65,17 @@
        <string>选择文件</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="upgrade_local_button">
+      <property name="maximumSize">
+       <size>
+        <width>150</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>升级底层程序</string>
+      </property>
+     </widget>
      <widget class="QPushButton" name="upgrade_button">
       <property name="maximumSize">
        <size>
@@ -73,7 +84,7 @@
        </size>
       </property>
       <property name="text">
-       <string>开始</string>
+       <string>升级应用程序</string>
       </property>
      </widget>
     </widget>

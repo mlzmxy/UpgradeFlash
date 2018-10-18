@@ -29,8 +29,10 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete upgrade_work;
     delete msg;
+    upgrade_work->quit();
+    upgrade_work->wait();
+    delete upgrade_work;
 }
 
 void MainWindow::SetTextInfo(QString info)
@@ -47,11 +49,30 @@ void MainWindow::on_select_button_clicked()
 
 void MainWindow::on_upgrade_button_clicked()
 {
+    upgrade_work->setSector(UpgradeProc::AppProgram);
+    upgrade_work->setOrigin_addr(0x318000);
+    upgrade_work->setAddr_len(0x18000);
+
     upgrade_work->start();
 
     this->ui->select_button->setEnabled(false);
     this->ui->upgrade_button->setEnabled(false);
+    this->ui->upgrade_local_button->setEnabled(false);
 }
+
+void MainWindow::on_upgrade_local_button_clicked()
+{
+    upgrade_work->setSector(UpgradeProc::LocalProgram);
+    upgrade_work->setOrigin_addr(0x338000);
+    upgrade_work->setAddr_len(0x8000);
+
+    upgrade_work->start();
+
+    this->ui->select_button->setEnabled(false);
+    this->ui->upgrade_button->setEnabled(false);
+    this->ui->upgrade_local_button->setEnabled(false);
+}
+
 
 void MainWindow::ShowResultMsg(bool result)
 {
@@ -61,3 +82,4 @@ void MainWindow::ShowResultMsg(bool result)
         QMessageBox::warning(this, tr("错误"), tr("升级失败!"), QMessageBox::Cancel);
     }
 }
+
