@@ -4,7 +4,7 @@
 #include <string>
 using std::string;
 
-#include "CAN_TO_USB.h"
+#include "puchuangdianzi/CAN_TO_USB.h"
 
 // CAN_TO_USB
 typedef bool  (*Func1)(DWORD);
@@ -15,11 +15,11 @@ typedef bool  (*Func5)(DWORD, PCHAR);
 typedef DWORD (*Func6)(DWORD, DWORD, P_VCI_CAN_OBJ, DWORD, INT);
 typedef DWORD (*Func7)(DWORD, DWORD);
 
-class CanFunc
+class CanFunc_PuChuang
 {
 public:
-    CanFunc();
-    ~CanFunc();
+    CanFunc_PuChuang();
+    ~CanFunc_PuChuang();
 
     void SetInitConfig();
     bool OpenAndInitDevice();

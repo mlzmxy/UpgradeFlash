@@ -1,7 +1,6 @@
-#include "CAN_TO_USB.h"
-#include "canfunc.h"
+#include "canfunc_puchuang.h"
 
-CanFunc::CanFunc()
+CanFunc_PuChuang::CanFunc_PuChuang()
     :error_code(0),
      _OpenDevice(nullptr),
      _CloseDevice(nullptr),
@@ -16,11 +15,11 @@ CanFunc::CanFunc()
 
 }
 
-CanFunc::~CanFunc()
+CanFunc_PuChuang::~CanFunc_PuChuang()
 {
 }
 
-bool CanFunc::OpenAndInitDevice()
+bool CanFunc_PuChuang::OpenAndInitDevice()
 {
     //can初始化设置
     init_config.AccCode = 0x00000000;
@@ -66,52 +65,52 @@ bool CanFunc::OpenAndInitDevice()
     return true;
 }
 
-bool CanFunc::OpenDevice(DWORD DevIndex)
+bool CanFunc_PuChuang::OpenDevice(DWORD DevIndex)
 {
     return _OpenDevice(DevIndex);
 }
 
-bool CanFunc::CloseDevice(DWORD DevIndex)
+bool CanFunc_PuChuang::CloseDevice(DWORD DevIndex)
 {
     return _CloseDevice(DevIndex);
 }
 
-bool CanFunc::ResetCan(DWORD DevIndex, DWORD CANIndex)
+bool CanFunc_PuChuang::ResetCan(DWORD DevIndex, DWORD CANIndex)
 {
     return _ResetCan(DevIndex, CANIndex);
 }
 
-bool CanFunc::InitCan(DWORD DevIndex, DWORD CANIndex, P_VCI_INIT_CONFIG pInitConfig)
+bool CanFunc_PuChuang::InitCan(DWORD DevIndex, DWORD CANIndex, P_VCI_INIT_CONFIG pInitConfig)
 {
     return _InitCan(DevIndex, CANIndex, pInitConfig);
 }
 
-bool CanFunc::Transmit(DWORD DevIndex, DWORD CANIndex, P_VCI_CAN_OBJ pSend)
+bool CanFunc_PuChuang::Transmit(DWORD DevIndex, DWORD CANIndex, P_VCI_CAN_OBJ pSend)
 {
     return _Transmit(DevIndex, CANIndex, pSend);
 }
 
-bool CanFunc::ReadDevSn(DWORD DevIndex, PCHAR DevSn)
+bool CanFunc_PuChuang::ReadDevSn(DWORD DevIndex, PCHAR DevSn)
 {
     return _ReadDevSn(DevIndex, DevSn);
 }
 
-DWORD CanFunc::Receive(DWORD DevIndex, DWORD CANIndex, P_VCI_CAN_OBJ pReceive, DWORD Len, INT WaitTime)
+DWORD CanFunc_PuChuang::Receive(DWORD DevIndex, DWORD CANIndex, P_VCI_CAN_OBJ pReceive, DWORD Len, INT WaitTime)
 {
     return _Receive(DevIndex, CANIndex, pReceive, Len, WaitTime);
 }
 
-DWORD CanFunc::GetReceiveNum(DWORD DevIndex, DWORD CANIndex)
+DWORD CanFunc_PuChuang::GetReceiveNum(DWORD DevIndex, DWORD CANIndex)
 {
     return _GetReceiveNum(DevIndex, CANIndex);
 }
 
-bool CanFunc::ClearBuffer(DWORD DevIndex, DWORD CANIndex)
+bool CanFunc_PuChuang::ClearBuffer(DWORD DevIndex, DWORD CANIndex)
 {
     return _ClearBuffer(DevIndex, CANIndex);
 }
 
-std::string CanFunc::GetErrorMsg()
+std::string CanFunc_PuChuang::GetErrorMsg()
 {
     string msg = "";
     switch(error_code)

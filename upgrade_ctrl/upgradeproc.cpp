@@ -12,7 +12,7 @@
 
 UpgradeProc::UpgradeProc() :
     hex_parsing(new HexParsing),
-    can_func(new CanFunc),
+    can_func(nullptr),
     message(new StdMessage),
     m_datablock_size(0x200),
     m_error_code(0),
@@ -25,7 +25,7 @@ UpgradeProc::UpgradeProc() :
 
 UpgradeProc::UpgradeProc(unsigned short blockSize) :
     hex_parsing(new HexParsing),
-    can_func(new CanFunc),
+    can_func(nullptr),
     message(new StdMessage),
     m_datablock_size(blockSize),
     m_error_code(0),
@@ -36,9 +36,9 @@ UpgradeProc::UpgradeProc(unsigned short blockSize) :
     m_can_data.resize(8);
 }
 
-UpgradeProc::UpgradeProc(Message* msg, EraseSector sector, unsigned short blockSize) :
+UpgradeProc::UpgradeProc(CanFunc* canFunc, Message* msg, EraseSector sector, unsigned short blockSize) :
     hex_parsing(new HexParsing),
-    can_func(new CanFunc),
+    can_func(canFunc),
     message(msg),
     sectors(sector),
     m_datablock_size(blockSize),
@@ -71,7 +71,7 @@ bool UpgradeProc::Process()
     m_error_code = 0;
 
     int progress_value = 1;  //进度值
-    int sum_datablock = addr_len / this->m_datablock_size;
+    unsigned int sum_datablock = addr_len / this->m_datablock_size;
     int progress_added = 100 / sum_datablock;  //进度增加值
 
     while(true) {
@@ -432,21 +432,18 @@ void UpgradeProc::WaitForUpgrade()
 
 bool UpgradeProc::CanSendData()
 {
-    m_candata_struct.ID = m_canid_cmd;
-    m_candata_struct.SendType = 0;
-    m_candata_struct.RemoteFlag = 0;
-    m_candata_struct.ExternFlag = 1;
-    m_candata_struct.DataLen = 8;
-    m_candata_struct.Data[0] = m_can_data.at(0);
-    m_candata_struct.Data[1] = m_can_data.at(1);
-    m_candata_struct.Data[2] = m_can_data.at(2);
-    m_candata_struct.Data[3] = m_can_data.at(3);
-    m_candata_struct.Data[4] = m_can_data.at(4);
-    m_candata_struct.Data[5] = m_can_data.at(5);
-    m_candata_struct.Data[6] = m_can_data.at(6);
-    m_candata_struct.Data[7] = m_can_data.at(7);
+    m_candata.id = m_canid_cmd;
+    m_candata.datalen = 8;
+    m_candata.data[0] = m_can_data.at(0);
+    m_candata.data[1] = m_can_data.at(1);
+    m_candata.data[2] = m_can_data.at(2);
+    m_candata.data[3] = m_can_data.at(3);
+    m_candata.data[4] = m_can_data.at(4);
+    m_candata.data[5] = m_can_data.at(5);
+    m_candata.data[6] = m_can_data.at(6);
+    m_candata.data[7] = m_can_data.at(7);
 
-    if(can_func->Transmit(Dev_Index, Can_Index_1, &m_candata_struct)) {
+    if(can_func->Transmit(&m_candata)) {
         return true;
     } else {
         message->Cout("CAN发送失败");
@@ -456,21 +453,18 @@ bool UpgradeProc::CanSendData()
 
 bool UpgradeProc::CanSendFlashData()
 {
-    m_candata_struct.ID = m_canid_data;
-    m_candata_struct.SendType = 0;
-    m_candata_struct.RemoteFlag = 0;
-    m_candata_struct.ExternFlag = 1;
-    m_candata_struct.DataLen = 8;
-    m_candata_struct.Data[0] = m_can_data.at(0);
-    m_candata_struct.Data[1] = m_can_data.at(1);
-    m_candata_struct.Data[2] = m_can_data.at(2);
-    m_candata_struct.Data[3] = m_can_data.at(3);
-    m_candata_struct.Data[4] = m_can_data.at(4);
-    m_candata_struct.Data[5] = m_can_data.at(5);
-    m_candata_struct.Data[6] = m_can_data.at(6);
-    m_candata_struct.Data[7] = m_can_data.at(7);
+    m_candata.id = m_canid_data;
+    m_candata.datalen = 8;
+    m_candata.data[0] = m_can_data.at(0);
+    m_candata.data[1] = m_can_data.at(1);
+    m_candata.data[2] = m_can_data.at(2);
+    m_candata.data[3] = m_can_data.at(3);
+    m_candata.data[4] = m_can_data.at(4);
+    m_candata.data[5] = m_can_data.at(5);
+    m_candata.data[6] = m_can_data.at(6);
+    m_candata.data[7] = m_can_data.at(7);
 
-    if(can_func->Transmit(Dev_Index, Can_Index_1, &m_candata_struct)) {
+    if(can_func->Transmit(&m_candata)) {
         return true;
     } else {
         message->Cout("CAN发送失败");
@@ -496,19 +490,18 @@ bool UpgradeProc::CanSendCmdData(Flow flow)
 
 bool UpgradeProc::CanReceiveData()
 {
-    if(can_func->GetReceiveNum(Dev_Index, Can_Index_1)) {
-        if(can_func->Receive(Dev_Index, Can_Index_1, &m_candata_struct, 1, 5)) {
-            if((m_canid_receive == m_candata_struct.ID) && (8 == m_candata_struct.DataLen)) {
-                m_can_data.at(0) = m_candata_struct.Data[0];
-                m_can_data.at(1) = m_candata_struct.Data[1];
-                m_can_data.at(2) = m_candata_struct.Data[2];
-                m_can_data.at(3) = m_candata_struct.Data[3];
-                m_can_data.at(4) = m_candata_struct.Data[4];
-                m_can_data.at(5) = m_candata_struct.Data[5];
-                m_can_data.at(6) = m_candata_struct.Data[6];
-                m_can_data.at(7) = m_candata_struct.Data[7];
-                return true;
-            }
+    if(can_func->GetReceiveNum()) {
+        can_func->ReceiveData(&m_candata);
+        if((m_canid_receive == m_candata.id) && (8 == m_candata.datalen)) {
+            m_can_data.at(0) = m_candata.data[0];
+            m_can_data.at(1) = m_candata.data[1];
+            m_can_data.at(2) = m_candata.data[2];
+            m_can_data.at(3) = m_candata.data[3];
+            m_can_data.at(4) = m_candata.data[4];
+            m_can_data.at(5) = m_candata.data[5];
+            m_can_data.at(6) = m_candata.data[6];
+            m_can_data.at(7) = m_candata.data[7];
+            return true;
         }
     }
     return false;

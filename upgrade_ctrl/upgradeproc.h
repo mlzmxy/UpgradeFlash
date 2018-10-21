@@ -7,7 +7,7 @@ using std::string;
 using std::vector;
 
 #include "hexparsing.h"
-#include "canfunc.h"
+#include "usbcan/canfunc.h"
 #include "message.h"
 
 
@@ -21,7 +21,7 @@ public:
 
     UpgradeProc();
     UpgradeProc(unsigned short blockSize);
-    UpgradeProc(Message* msg, EraseSector sector,unsigned short blockSize);
+    UpgradeProc(CanFunc* canFunc, Message* msg, EraseSector sector,unsigned short blockSize);
     ~UpgradeProc();
 
     bool InitCAN();
@@ -56,7 +56,7 @@ private:
     unsigned int m_error_code;
 
     // can struct
-    VCI_CAN_OBJ m_candata_struct;  //CAN数据结构
+    CanMsg m_candata;  //CAN消息
     vector<unsigned char> m_can_data;  //CAN数据
 
     unsigned long m_canid_cmd;

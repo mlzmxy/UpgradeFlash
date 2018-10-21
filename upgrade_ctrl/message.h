@@ -9,6 +9,7 @@ class Message
 public:
     virtual void Cout(string msg) = 0;
     virtual void ProgressValue(int progress_value) = 0;
+    virtual ~Message();
 };
 
 class StdMessage : public Message

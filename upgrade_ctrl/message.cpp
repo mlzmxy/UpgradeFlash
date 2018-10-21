@@ -12,3 +12,8 @@ void StdMessage::ProgressValue(int progress_value)
 {
     std::cout << progress_value << std::endl;
 }
+
+Message::~Message()
+{
+
+}

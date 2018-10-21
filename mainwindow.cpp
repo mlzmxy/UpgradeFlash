@@ -28,9 +28,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     upgrade_work->setQmsg(msg);
 
-    connect(msg, QMsgInfo::TextAppend, ui->textBrowser, QTextBrowser::append);
-    connect(msg, QMsgInfo::ScrollValueChanged, ui->progressBar, QProgressBar::setValue);
-    connect(upgrade_work, UpgradeWork::ReturnResult, this, MainWindow::ShowResultMsg);
+    connect(msg, &QMsgInfo::TextAppend, ui->textBrowser, &QTextBrowser::append);
+    connect(msg, &QMsgInfo::ScrollValueChanged, ui->progressBar, &QProgressBar::setValue);
+    connect(upgrade_work, &UpgradeWork::ReturnResult, this, &MainWindow::ShowResultMsg);
 }
 
 MainWindow::~MainWindow()
