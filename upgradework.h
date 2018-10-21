@@ -25,6 +25,8 @@ public:
 
     void setSector(const UpgradeProc::EraseSector &value);
 
+    void SetCANID(unsigned long canid_cmd, unsigned long canid_receive, unsigned long canid_data);
+
 signals:
     void ReturnResult(bool result);
 
@@ -35,6 +37,10 @@ private:
     UpgradeProc::EraseSector sector;
     unsigned int origin_addr;
     unsigned int addr_len;
+
+    unsigned long m_canid_cmd;
+    unsigned long m_canid_receive;
+    unsigned long m_canid_data;
 };
 
 #endif // UPGRADEWORK_H

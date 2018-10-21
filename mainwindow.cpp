@@ -14,10 +14,17 @@ MainWindow::MainWindow(QWidget *parent) :
     msg(new QMsgInfo)
 {
     ui->setupUi(this);
-    this->setWindowTitle("UpgradeFlash");
+    this->setWindowTitle("UpgradeFlash for 二次配电 v0.1");
     ui->textBrowser->setFontFamily("微软雅黑");
     ui->progressBar->setRange(0, 100);
     ui->progressBar->setValue(0);
+    ui->comboBox->addItem(tr("高压母线盒"));
+    ui->comboBox->addItem(tr("低压母线盒"));
+    ui->comboBox->addItem(tr("综合控制盒"));
+    ui->comboBox->addItem(tr("直流配电终端1"));
+    ui->comboBox->addItem(tr("直流配电终端2"));
+    ui->comboBox->addItem(tr("直流配电终端3"));
+    ui->comboBox->addItem(tr("直流配电终端4"));
 
     upgrade_work->setQmsg(msg);
 
@@ -53,6 +60,39 @@ void MainWindow::on_upgrade_button_clicked()
     upgrade_work->setOrigin_addr(0x318000);
     upgrade_work->setAddr_len(0x18000);
 
+    switch (ui->comboBox->currentIndex()) {
+    case 0:
+        ui->textBrowser->append("高压母线盒应用程序升级");
+        upgrade_work->SetCANID(0x01A2A100, 0x01A2A101, 0x01A2A104);
+        break;
+    case 1:
+        ui->textBrowser->append("低压母线盒应用程序升级");
+        upgrade_work->SetCANID(0x01A2A300, 0x01A2A301, 0x01A2A304);
+        break;
+    case 2:
+        ui->textBrowser->append("综合控制盒应用程序升级");
+        upgrade_work->SetCANID(0x01A2A000, 0x01A2A001, 0x01A2A004);
+        break;
+    case 3:
+        ui->textBrowser->append("直流配电终端1应用程序升级");
+        upgrade_work->SetCANID(0x01A2A510, 0x01A2A511, 0x01A2A514);
+        break;
+    case 4:
+        ui->textBrowser->append("直流配电终端2应用程序升级");
+        upgrade_work->SetCANID(0x01A2A520, 0x01A2A521, 0x01A2A524);
+        break;
+    case 5:
+        ui->textBrowser->append("直流配电终端3应用程序升级");
+        upgrade_work->SetCANID(0x01A2A530, 0x01A2A531, 0x01A2A534);
+        break;
+    case 6:
+        ui->textBrowser->append("直流配电终端4应用程序升级");
+        upgrade_work->SetCANID(0x01A2A540, 0x01A2A541, 0x01A2A544);
+        break;
+    default:
+        break;
+    }
+
     upgrade_work->start();
 
     this->ui->select_button->setEnabled(false);
@@ -65,6 +105,39 @@ void MainWindow::on_upgrade_local_button_clicked()
     upgrade_work->setSector(UpgradeProc::LocalProgram);
     upgrade_work->setOrigin_addr(0x338000);
     upgrade_work->setAddr_len(0x8000);
+
+    switch (ui->comboBox->currentIndex()) {
+    case 0:
+        ui->textBrowser->append("高压母线盒底层程序升级");
+        upgrade_work->SetCANID(0x01A2A100, 0x01A2A101, 0x01A2A104);
+        break;
+    case 1:
+        ui->textBrowser->append("低压母线盒底层程序升级");
+        upgrade_work->SetCANID(0x01A2A300, 0x01A2A301, 0x01A2A304);
+        break;
+    case 2:
+        ui->textBrowser->append("综合控制盒底层程序升级");
+        upgrade_work->SetCANID(0x01A2A000, 0x01A2A001, 0x01A2A004);
+        break;
+    case 3:
+        ui->textBrowser->append("直流配电终端1底层程序升级");
+        upgrade_work->SetCANID(0x01A2A510, 0x01A2A511, 0x01A2A514);
+        break;
+    case 4:
+        ui->textBrowser->append("直流配电终端2底层程序升级");
+        upgrade_work->SetCANID(0x01A2A520, 0x01A2A521, 0x01A2A524);
+        break;
+    case 5:
+        ui->textBrowser->append("直流配电终端3底层程序升级");
+        upgrade_work->SetCANID(0x01A2A530, 0x01A2A531, 0x01A2A534);
+        break;
+    case 6:
+        ui->textBrowser->append("直流配电终端4底层程序升级");
+        upgrade_work->SetCANID(0x01A2A540, 0x01A2A541, 0x01A2A544);
+        break;
+    default:
+        break;
+    }
 
     upgrade_work->start();
 

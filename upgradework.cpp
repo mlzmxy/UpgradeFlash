@@ -17,6 +17,7 @@ void UpgradeWork::run()
 {
     bool result = 0;
     UpgradeProc proc(qmsg, sector, 0x800);
+    proc.SetCanID(m_canid_cmd, m_canid_receive, m_canid_data);
     if(proc.ParseHexFile(this->file_path_name.toStdString(), origin_addr, addr_len)){
         if(proc.InitCAN()) {
             proc.WaitForUpgrade();
@@ -49,4 +50,11 @@ void UpgradeWork::setAddr_len(unsigned int value)
 void UpgradeWork::setSector(const UpgradeProc::EraseSector &value)
 {
     sector = value;
+}
+
+void UpgradeWork::SetCANID(unsigned long canid_cmd, unsigned long canid_receive, unsigned long canid_data)
+{
+    m_canid_cmd = canid_cmd;
+    m_canid_receive = canid_receive;
+    m_canid_data = canid_data;
 }

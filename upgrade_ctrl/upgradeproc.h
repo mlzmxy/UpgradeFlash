@@ -29,6 +29,8 @@ public:
     void WaitForUpgrade();
     bool Process();
 
+    void SetCanID(unsigned long canid_cmd, unsigned long canid_receive, unsigned long canid_data);
+
 private:
     typedef enum {  //flash升级流程
         handshake = 0x10,
@@ -56,6 +58,10 @@ private:
     // can struct
     VCI_CAN_OBJ m_candata_struct;  //CAN数据结构
     vector<unsigned char> m_can_data;  //CAN数据
+
+    unsigned long m_canid_cmd;
+    unsigned long m_canid_receive;
+    unsigned long m_canid_data;
 
     bool CanSendData();
     bool CanSendFlashData();

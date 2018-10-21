@@ -1,12 +1,24 @@
 #include "upgradeproc.h"
 #include "crc16.h"
 
+//综合控制盒 00
+//高压母线盒 10
+//低压母线盒 30
+//直流配电终端 51, 52, 53, 54
+
+#define Send_CANID 0x01A2A540
+#define RECEIVE_CANID 0x01A2A541
+#define DATA_CANID 0x01A2A544
+
 UpgradeProc::UpgradeProc() :
     hex_parsing(new HexParsing),
     can_func(new CanFunc),
     message(new StdMessage),
     m_datablock_size(0x200),
-    m_error_code(0)
+    m_error_code(0),
+    m_canid_cmd(0),
+    m_canid_receive(0),
+    m_canid_data(0)
 {
     m_can_data.resize(8);
 }
@@ -16,7 +28,10 @@ UpgradeProc::UpgradeProc(unsigned short blockSize) :
     can_func(new CanFunc),
     message(new StdMessage),
     m_datablock_size(blockSize),
-    m_error_code(0)
+    m_error_code(0),
+    m_canid_cmd(0),
+    m_canid_receive(0),
+    m_canid_data(0)
 {
     m_can_data.resize(8);
 }
@@ -27,7 +42,10 @@ UpgradeProc::UpgradeProc(Message* msg, EraseSector sector, unsigned short blockS
     message(msg),
     sectors(sector),
     m_datablock_size(blockSize),
-    m_error_code(0)
+    m_error_code(0),
+    m_canid_cmd(0),
+    m_canid_receive(0),
+    m_canid_data(0)
 {
     m_can_data.resize(8);
 }
@@ -338,6 +356,13 @@ bool UpgradeProc::Process()
     }
 }
 
+void UpgradeProc::SetCanID(unsigned long canid_cmd, unsigned long canid_receive, unsigned long canid_data)
+{
+    m_canid_cmd = canid_cmd;
+    m_canid_receive = canid_receive;
+    m_canid_data = canid_data;
+}
+
 
 /**
  * @brief UpgradeProc::ParseHexFile
@@ -407,7 +432,7 @@ void UpgradeProc::WaitForUpgrade()
 
 bool UpgradeProc::CanSendData()
 {
-    m_candata_struct.ID = 0x01A2A3A0;
+    m_candata_struct.ID = m_canid_cmd;
     m_candata_struct.SendType = 0;
     m_candata_struct.RemoteFlag = 0;
     m_candata_struct.ExternFlag = 1;
@@ -431,7 +456,7 @@ bool UpgradeProc::CanSendData()
 
 bool UpgradeProc::CanSendFlashData()
 {
-    m_candata_struct.ID = 0x01A2A3A4;
+    m_candata_struct.ID = m_canid_data;
     m_candata_struct.SendType = 0;
     m_candata_struct.RemoteFlag = 0;
     m_candata_struct.ExternFlag = 1;
@@ -473,7 +498,7 @@ bool UpgradeProc::CanReceiveData()
 {
     if(can_func->GetReceiveNum(Dev_Index, Can_Index_1)) {
         if(can_func->Receive(Dev_Index, Can_Index_1, &m_candata_struct, 1, 5)) {
-            if((0x01A2A3A1 == m_candata_struct.ID) && (8 == m_candata_struct.DataLen)) {
+            if((m_canid_receive == m_candata_struct.ID) && (8 == m_candata_struct.DataLen)) {
                 m_can_data.at(0) = m_candata_struct.Data[0];
                 m_can_data.at(1) = m_candata_struct.Data[1];
                 m_can_data.at(2) = m_candata_struct.Data[2];

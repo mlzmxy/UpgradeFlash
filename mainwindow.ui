@@ -32,19 +32,19 @@
       <x>20</x>
       <y>20</y>
       <width>560</width>
-      <height>400</height>
+      <height>380</height>
      </rect>
     </property>
     <property name="minimumSize">
      <size>
       <width>560</width>
-      <height>400</height>
+      <height>380</height>
      </size>
     </property>
     <property name="maximumSize">
      <size>
       <width>560</width>
-      <height>400</height>
+      <height>16777215</height>
      </size>
     </property>
     <property name="orientation">
@@ -54,10 +54,24 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
+     <widget class="QComboBox" name="comboBox">
+      <property name="maximumSize">
+       <size>
+        <width>140</width>
+        <height>40</height>
+       </size>
+      </property>
+      <property name="currentText">
+       <string/>
+      </property>
+      <property name="currentIndex">
+       <number>-1</number>
+      </property>
+     </widget>
      <widget class="QPushButton" name="select_button">
       <property name="maximumSize">
        <size>
-        <width>150</width>
+        <width>140</width>
         <height>40</height>
        </size>
       </property>
@@ -68,7 +82,7 @@
      <widget class="QPushButton" name="upgrade_local_button">
       <property name="maximumSize">
        <size>
-        <width>150</width>
+        <width>140</width>
         <height>40</height>
        </size>
       </property>
@@ -79,7 +93,7 @@
      <widget class="QPushButton" name="upgrade_button">
       <property name="maximumSize">
        <size>
-        <width>150</width>
+        <width>140</width>
         <height>40</height>
        </size>
       </property>
