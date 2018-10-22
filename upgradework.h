@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QString>
 
+#include "usbcan/canfunc.h"
 #include "qmsginfo.h"
 #include "upgrade_ctrl/upgradeproc.h"
 
@@ -27,11 +28,14 @@ public:
 
     void SetCANID(unsigned long canid_cmd, unsigned long canid_receive, unsigned long canid_data);
 
+    void setCan_func(CanFunc *value);
+
 signals:
     void ReturnResult(bool result);
 
 private:
     UpgradeProc* upgrade_proc;
+    CanFunc *can_func;
     QMsgInfo* qmsg;
     QString file_path_name;
     UpgradeProc::EraseSector sector;
