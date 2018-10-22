@@ -88,7 +88,7 @@ bool CanFunc_ChuangXin::Transmit(PCanMsg data)
     }
 }
 
-bool CanFunc_ChuangXin::GetReceiveNum()
+unsigned long CanFunc_ChuangXin::GetReceiveNum()
 {
     return _GetReceiveNum(DeviceType, DeviceInd, CANInd);
 }
@@ -131,6 +131,8 @@ std::string CanFunc_ChuangXin::GetErrorMsg()
         break;
     case ERROR_SENDDATA:
         msg = "CAN发送失败";
+        break;
+    default:
         break;
     }
     return msg;

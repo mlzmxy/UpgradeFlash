@@ -20,9 +20,8 @@ public:
     CanFunc_ChuangXin();
     virtual bool OpenAndInitDevice();
     virtual bool Transmit(PCanMsg data);
-    virtual bool GetReceiveNum();
+    virtual unsigned long GetReceiveNum();
     virtual void ReceiveData(PCanMsg data);
-
     virtual string GetErrorMsg();
 
 private:

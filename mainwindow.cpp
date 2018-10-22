@@ -16,7 +16,6 @@ MainWindow::MainWindow(QWidget *parent) :
     msg(new QMsgInfo)
 {
     ui->setupUi(this);
-    this->setWindowIcon(QIcon(":/icon/app_icon"));
     this->setWindowTitle("UpgradeFlash for 二次配电 v0.11");
     ui->textBrowser->setFontFamily("微软雅黑");
     ui->progressBar->setRange(0, 100);

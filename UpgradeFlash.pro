@@ -54,6 +54,4 @@ HEADERS += \
 FORMS += \
         mainwindow.ui
 
-RESOURCES += \
-    icon.qrc
-
+RC_ICONS = upgrade_flash.ico
