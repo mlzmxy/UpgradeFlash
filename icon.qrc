@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file alias="app_icon">upgrade_flash.ico</file>
+    </qresource>
+</RCC>

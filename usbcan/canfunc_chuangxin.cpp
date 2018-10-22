@@ -1,7 +1,5 @@
 #include "canfunc_chuangxin.h"
 
-#include <QLibrary>
-
 CanFunc_ChuangXin::CanFunc_ChuangXin() :
     _OpenDevice(nullptr),
     _CloseDevice(nullptr),
@@ -25,23 +23,24 @@ CanFunc_ChuangXin::CanFunc_ChuangXin() :
 
 bool CanFunc_ChuangXin::OpenAndInitDevice()
 {
-    QLibrary lib("ControlCAN.dll");
-    if (lib.load()) {
-        _OpenDevice = (Func1)lib.resolve("VCI_OpenDevice");
-        _CloseDevice = (Func2)lib.resolve("VCI_CloseDevice");
-        _ResetCan = (Func1)lib.resolve("VCI_ResetCan");
-        _InitCan = (Func4)lib.resolve("VCI_InitCan");
-        _StartCAN = (Func1)lib.resolve("VCI_StartCAN");
-        _Transmit = (Func5)lib.resolve("VCI_Transmit");
-        _Receive = (Func6)lib.resolve("VCI_Receive");
-        _GetReceiveNum = (Func3)lib.resolve("VCI_GetReceiveNum");
-        _ClearBuffer = (Func1)lib.resolve("VCI_ClearBuffer");
+    //加载动态链接库ControlCAN.dll
+    HMODULE hMod = LoadLibraryA("ControlCAN.dll");
+    if (hMod) {
+        _OpenDevice = (Func1)GetProcAddress(hMod, "VCI_OpenDevice");
+        _CloseDevice = (Func2)GetProcAddress(hMod, "VCI_CloseDevice");
+        _ResetCan = (Func1)GetProcAddress(hMod, "VCI_ResetCAN");
+        _InitCan = (Func4)GetProcAddress(hMod, "VCI_InitCAN");
+        _StartCAN = (Func1)GetProcAddress(hMod, "VCI_StartCAN");
+        _Transmit = (Func5)GetProcAddress(hMod, "VCI_Transmit");
+        _Receive = (Func6)GetProcAddress(hMod, "VCI_Receive");
+        _GetReceiveNum = (Func3)GetProcAddress(hMod, "VCI_GetReceiveNum");
+        _ClearBuffer = (Func1)GetProcAddress(hMod, "VCI_ClearBuffer");
 
         if(_OpenDevice && _CloseDevice && _ResetCan && _InitCan && _Transmit
            && _Receive && _GetReceiveNum && _ClearBuffer) {
-            if(_OpenDevice(DeviceType, DeviceInd, Reserved)) {
-                if(_InitCan(DeviceType, DeviceInd, CANInd, &init_config)) {
-                    if(!_StartCAN(DeviceType, DeviceInd, CANInd)) {
+            if(_OpenDevice(DeviceType, DeviceInd, Reserved) == 1) {
+                if(_InitCan(DeviceType, DeviceInd, CANInd, &init_config) == 1) {
+                    if(_StartCAN(DeviceType, DeviceInd, CANInd) != 1) {
                         m_error_code = ERROR_StartCan;
                         return false;
                     }
@@ -62,45 +61,6 @@ bool CanFunc_ChuangXin::OpenAndInitDevice()
         m_error_code = ERROR_LOAD_DLL;
         return false;
     }
-
-    //加载动态链接库ControlCAN.dll
-//    HMODULE hMod = LoadLibraryA("ControlCAN.dll");
-//    if (hMod) {
-//        _OpenDevice = (Func1)GetProcAddress(hMod, "VCI_OpenDevice");
-//        _CloseDevice = (Func2)GetProcAddress(hMod, "VCI_CloseDevice");
-//        _ResetCan = (Func1)GetProcAddress(hMod, "VCI_ResetCan");
-//        _InitCan = (Func4)GetProcAddress(hMod, "VCI_InitCan");
-//        _StartCAN = (Func1)GetProcAddress(hMod, "VCI_StartCAN");
-//        _Transmit = (Func5)GetProcAddress(hMod, "VCI_Transmit");
-//        _Receive = (Func6)GetProcAddress(hMod, "VCI_Receive");
-//        _GetReceiveNum = (Func3)GetProcAddress(hMod, "VCI_GetReceiveNum");
-//        _ClearBuffer = (Func1)GetProcAddress(hMod, "VCI_ClearBuffer");
-
-//        if(_OpenDevice && _CloseDevice && _ResetCan && _InitCan && _Transmit
-//           && _Receive && _GetReceiveNum && _ClearBuffer) {
-//            if(_OpenDevice(DeviceType, DeviceInd, Reserved)) {
-//                if(_InitCan(DeviceType, DeviceInd, CANInd, &init_config)) {
-//                    if(!_StartCAN(DeviceType, DeviceInd, CANInd)) {
-//                        m_error_code = ERROR_StartCan;
-//                        return false;
-//                    }
-//                } else {
-//                    m_error_code = ERROR_InitCan;
-//                    return false;
-//                }
-//            } else {
-//                m_error_code = ERROR_OPENDEVICE;
-//                return false;
-//            }
-//        } else {
-//            m_error_code = ERROR_LINK_DLL_FUNCS;
-//            return false;
-//        }
-
-//    } else {
-//        m_error_code = ERROR_LOAD_DLL;
-//        return false;
-//    }
     return true;
 }
 

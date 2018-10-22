@@ -2,6 +2,8 @@
 #include <QFileDialog>
 #include <QLibrary>
 #include <QMessageBox>
+#include <QIcon>
+#include <QLabel>
 #include <QDebug>
 
 #include "mainwindow.h"
@@ -14,10 +16,14 @@ MainWindow::MainWindow(QWidget *parent) :
     msg(new QMsgInfo)
 {
     ui->setupUi(this);
-    this->setWindowTitle("UpgradeFlash for 二次配电 v0.1");
+    this->setWindowIcon(QIcon(":/icon/app_icon"));
+    this->setWindowTitle("UpgradeFlash for 二次配电 v0.11");
     ui->textBrowser->setFontFamily("微软雅黑");
     ui->progressBar->setRange(0, 100);
     ui->progressBar->setValue(0);
+
+    ui->statusBar->addWidget(new QLabel("USBCAN:创芯科技CANalyst-II; 通道:CAN1"));//显示USBCAN设备信息
+
     ui->comboBox->addItem(tr("高压母线盒"));
     ui->comboBox->addItem(tr("低压母线盒"));
     ui->comboBox->addItem(tr("综合控制盒"));
@@ -25,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox->addItem(tr("直流配电终端2"));
     ui->comboBox->addItem(tr("直流配电终端3"));
     ui->comboBox->addItem(tr("直流配电终端4"));
+//    ui->comboBox->addItem(tr("测试"));
 
     upgrade_work->setQmsg(msg);
 
@@ -93,6 +100,7 @@ void MainWindow::on_upgrade_button_clicked()
         break;
     }
 
+    //upgrade_work->SetCANID(0x01A2A3A0, 0x01A2A3A1, 0x01A2A3A4);  //测试
     upgrade_work->start();
 
     this->ui->select_button->setEnabled(false);
@@ -139,6 +147,7 @@ void MainWindow::on_upgrade_local_button_clicked()
         break;
     }
 
+    //upgrade_work->SetCANID(0x01A2A3A0, 0x01A2A3A1, 0x01A2A3A4);  //测试
     upgrade_work->start();
 
     this->ui->select_button->setEnabled(false);

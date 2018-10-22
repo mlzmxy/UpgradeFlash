@@ -44,9 +44,9 @@ private:
 
 // CAN
 #define DeviceType 4  //设备类型 CANalyst-II
-#define DeviceInd 0  //设备索引号
-#define CANInd 0   //第0路CAN
-#define Reserved 0   //保留
+#define DeviceInd 0   //设备索引号
+#define CANInd 0      //第0路CAN
+#define Reserved 0    //保留
 
 #define ERROR_LOAD_DLL 0x1        //DLL加载失败
 #define ERROR_LINK_DLL_FUNCS 0x2  //DLL函数链接失败
