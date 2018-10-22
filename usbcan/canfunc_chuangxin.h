@@ -28,6 +28,10 @@ private:
     VCI_INIT_CONFIG init_config;  //初始化参数
     VCI_CAN_OBJ m_candata_struct;  //CAN数据结构
 
+    unsigned long m_device_type;  //设备类型
+    unsigned long m_device_ind;   //设备索引号
+    unsigned long m_can_ind;      //can通道
+
     Func1 _OpenDevice;
     Func2 _CloseDevice;
     Func1 _ResetCan;
