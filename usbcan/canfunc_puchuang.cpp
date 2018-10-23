@@ -30,15 +30,15 @@ bool CanFunc_PuChuang::OpenAndInitDevice()
     //加载动态链接库CAN_TO_USB.dll
     HMODULE hMod = LoadLibraryA("CAN_TO_USB.dll");
     if (hMod) {
-        _OpenDevice = (Func1)GetProcAddress(hMod, "VCI_OpenDevice");
-        _CloseDevice = (Func1)GetProcAddress(hMod, "VCI_CloseDevice");
-        _ResetCan = (Func2)GetProcAddress(hMod, "VCI_ResetCan");
-        _InitCan = (Func3)GetProcAddress(hMod, "VCI_InitCan");
-        _Transmit = (Func4)GetProcAddress(hMod, "VCI_Transmit");
-        _ReadDevSn = (Func5)GetProcAddress(hMod, "VCI_ReadDevSn");
-        _Receive = (Func6)GetProcAddress(hMod, "VCI_Receive");
-        _GetReceiveNum = (Func7)GetProcAddress(hMod, "VCI_GetReceiveNum");
-        _ClearBuffer = (Func2)GetProcAddress(hMod, "VCI_ClearBuffer");
+        _OpenDevice = (Func_PuChuang_1)GetProcAddress(hMod, "VCI_OpenDevice");
+        _CloseDevice = (Func_PuChuang_1)GetProcAddress(hMod, "VCI_CloseDevice");
+        _ResetCan = (Func_PuChuang_2)GetProcAddress(hMod, "VCI_ResetCan");
+        _InitCan = (Func_PuChuang_3)GetProcAddress(hMod, "VCI_InitCan");
+        _Transmit = (Func_PuChuang_4)GetProcAddress(hMod, "VCI_Transmit");
+        _ReadDevSn = (Func_PuChuang_5)GetProcAddress(hMod, "VCI_ReadDevSn");
+        _Receive = (Func_PuChuang_6)GetProcAddress(hMod, "VCI_Receive");
+        _GetReceiveNum = (Func_PuChuang_7)GetProcAddress(hMod, "VCI_GetReceiveNum");
+        _ClearBuffer = (Func_PuChuang_2)GetProcAddress(hMod, "VCI_ClearBuffer");
 
         if(_OpenDevice && _CloseDevice && _ResetCan && _InitCan && _Transmit
                 && _ReadDevSn && _Receive && _GetReceiveNum && _ClearBuffer) {
@@ -92,7 +92,7 @@ unsigned long CanFunc_PuChuang::GetReceiveNum()
     return _GetReceiveNum(Dev_Index, Can_Index);
 }
 
-void CanFunc_PuChuang::ReceiveData(PCanMsg data)
+bool CanFunc_PuChuang::ReceiveData(PCanMsg data)
 {
     if(_Receive(Dev_Index, Can_Index, &m_candata_struct, 1, 5)) {
         data->id = m_candata_struct.ID;
@@ -105,7 +105,9 @@ void CanFunc_PuChuang::ReceiveData(PCanMsg data)
         data->data[5] = m_candata_struct.Data[5];
         data->data[6] = m_candata_struct.Data[6];
         data->data[7] = m_candata_struct.Data[7];
+        return true;
     }
+    return false;
 }
 
 std::string CanFunc_PuChuang::GetErrorMsg()

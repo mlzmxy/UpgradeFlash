@@ -1,5 +1,7 @@
 #include "canfunc_chuangxin.h"
 
+#include <QDebug>
+
 CanFunc_ChuangXin::CanFunc_ChuangXin() :
     _OpenDevice(nullptr),
     _CloseDevice(nullptr),
@@ -21,39 +23,40 @@ CanFunc_ChuangXin::CanFunc_ChuangXin() :
     init_config.Mode = 0;
 }
 
+CanFunc_ChuangXin::~CanFunc_ChuangXin()
+{
+
+}
+
 bool CanFunc_ChuangXin::OpenAndInitDevice()
 {
     //加载动态链接库ControlCAN.dll
     HMODULE hMod = LoadLibraryA("ControlCAN.dll");
     if (hMod) {
-        _OpenDevice = (Func1)GetProcAddress(hMod, "VCI_OpenDevice");
-        _CloseDevice = (Func2)GetProcAddress(hMod, "VCI_CloseDevice");
-        _ResetCan = (Func1)GetProcAddress(hMod, "VCI_ResetCAN");
-        _InitCan = (Func4)GetProcAddress(hMod, "VCI_InitCAN");
-        _StartCAN = (Func1)GetProcAddress(hMod, "VCI_StartCAN");
-        _Transmit = (Func5)GetProcAddress(hMod, "VCI_Transmit");
-        _Receive = (Func6)GetProcAddress(hMod, "VCI_Receive");
-        _GetReceiveNum = (Func3)GetProcAddress(hMod, "VCI_GetReceiveNum");
-        _ClearBuffer = (Func1)GetProcAddress(hMod, "VCI_ClearBuffer");
+        _OpenDevice = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_OpenDevice");
+        _CloseDevice = (Func_ChuangXin_2)GetProcAddress(hMod, "VCI_CloseDevice");
+        _ResetCan = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_ResetCAN");
+        _InitCan = (Func_ChuangXin_4)GetProcAddress(hMod, "VCI_InitCAN");
+        _StartCAN = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_StartCAN");
+        _Transmit = (Func_ChuangXin_5)GetProcAddress(hMod, "VCI_Transmit");
+        _Receive = (Func_ChuangXin_6)GetProcAddress(hMod, "VCI_Receive");
+        _GetReceiveNum = (Func_ChuangXin_3)GetProcAddress(hMod, "VCI_GetReceiveNum");
+        _ClearBuffer = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_ClearBuffer");
 
-        if(_OpenDevice && _CloseDevice && _ResetCan && _InitCan && _Transmit
-           && _Receive && _GetReceiveNum && _ClearBuffer) {
-            if(_OpenDevice(DeviceType, DeviceInd, Reserved) == 1) {
-                if(_InitCan(DeviceType, DeviceInd, CANInd, &init_config) == 1) {
-                    if(_StartCAN(DeviceType, DeviceInd, CANInd) != 1) {
-                        m_error_code = ERROR_StartCan;
-                        return false;
-                    }
-                } else {
-                    m_error_code = ERROR_InitCan;
-                    return false;
+        DWORD rel =  _OpenDevice(DeviceType, DeviceInd, Reserved);
+        if(rel == 1) {
+            rel = _InitCan(DeviceType, DeviceInd, CANInd, &init_config);
+            if(rel == 1) {
+                rel = _StartCAN(DeviceType, DeviceInd, CANInd);
+                if(rel == 1) {
+                    return true;
                 }
             } else {
-                m_error_code = ERROR_OPENDEVICE;
+                m_error_code = ERROR_InitCan;
                 return false;
             }
         } else {
-            m_error_code = ERROR_LINK_DLL_FUNCS;
+            m_error_code = ERROR_OPENDEVICE;
             return false;
         }
 
@@ -61,13 +64,14 @@ bool CanFunc_ChuangXin::OpenAndInitDevice()
         m_error_code = ERROR_LOAD_DLL;
         return false;
     }
-    return true;
+    m_error_code = ERROR_StartCan;
+    return false;
 }
 
 bool CanFunc_ChuangXin::Transmit(PCanMsg data)
 {
     m_candata_struct.ID = data->id;
-    m_candata_struct.SendType = 0;
+    m_candata_struct.SendType = 1;  //单次发送
     m_candata_struct.RemoteFlag = 0;
     m_candata_struct.ExternFlag = 1;
     m_candata_struct.DataLen = 8;
@@ -93,7 +97,7 @@ unsigned long CanFunc_ChuangXin::GetReceiveNum()
     return _GetReceiveNum(DeviceType, DeviceInd, CANInd);
 }
 
-void CanFunc_ChuangXin::ReceiveData(PCanMsg data)
+bool CanFunc_ChuangXin::ReceiveData(PCanMsg data)
 {
     if(_Receive(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1, 5)) {
         data->id = m_candata_struct.ID;
@@ -106,7 +110,9 @@ void CanFunc_ChuangXin::ReceiveData(PCanMsg data)
         data->data[5] = m_candata_struct.Data[5];
         data->data[6] = m_candata_struct.Data[6];
         data->data[7] = m_candata_struct.Data[7];
+        return true;
     }
+    return false;
 }
 
 std::string CanFunc_ChuangXin::GetErrorMsg()

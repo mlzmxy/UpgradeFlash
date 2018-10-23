@@ -1,7 +1,5 @@
 #include "upgradework.h"
 
-#include "usbcan/canfunc_chuangxin.h"
-
 UpgradeWork::UpgradeWork(QObject *parent) :
     QThread(parent),
     upgrade_proc(new UpgradeProc),

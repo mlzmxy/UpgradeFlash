@@ -5,16 +5,15 @@
 using std::string;
 
 #include "canfunc.h"
-#include "puchuangdianzi/CAN_TO_USB.h"
 
 // CAN_TO_USB
-typedef bool  (*Func1)(DWORD);
-typedef bool  (*Func2)(DWORD, DWORD);
-typedef bool  (*Func3)(DWORD, DWORD, P_VCI_INIT_CONFIG);
-typedef bool  (*Func4)(DWORD, DWORD, P_VCI_CAN_OBJ);
-typedef bool  (*Func5)(DWORD, PCHAR);
-typedef DWORD (*Func6)(DWORD, DWORD, P_VCI_CAN_OBJ, DWORD, INT);
-typedef DWORD (*Func7)(DWORD, DWORD);
+typedef bool  (*Func_PuChuang_1)(DWORD);
+typedef bool  (*Func_PuChuang_2)(DWORD, DWORD);
+typedef bool  (*Func_PuChuang_3)(DWORD, DWORD, PVCI_INIT_CONFIG);
+typedef bool  (*Func_PuChuang_4)(DWORD, DWORD, PVCI_CAN_OBJ);
+typedef bool  (*Func_PuChuang_5)(DWORD, PCHAR);
+typedef DWORD (*Func_PuChuang_6)(DWORD, DWORD, PVCI_CAN_OBJ, DWORD, INT);
+typedef DWORD (*Func_PuChuang_7)(DWORD, DWORD);
 
 class CanFunc_PuChuang : public CanFunc
 {
@@ -25,22 +24,22 @@ public:
     virtual bool OpenAndInitDevice();
     virtual bool Transmit(PCanMsg data);
     virtual unsigned long GetReceiveNum();
-    virtual void ReceiveData(PCanMsg data);
+    virtual bool ReceiveData(PCanMsg data);
     virtual string GetErrorMsg();
 
 private:
     VCI_INIT_CONFIG init_config;  //初始化参数
     VCI_CAN_OBJ m_candata_struct;  //CAN数据结构
 
-    Func1 _OpenDevice;
-    Func1 _CloseDevice;
-    Func2 _ResetCan;
-    Func3 _InitCan;
-    Func4 _Transmit;
-    Func5 _ReadDevSn;
-    Func6 _Receive;
-    Func7 _GetReceiveNum;
-    Func2 _ClearBuffer;
+    Func_PuChuang_1 _OpenDevice;
+    Func_PuChuang_1 _CloseDevice;
+    Func_PuChuang_2 _ResetCan;
+    Func_PuChuang_3 _InitCan;
+    Func_PuChuang_4 _Transmit;
+    Func_PuChuang_5 _ReadDevSn;
+    Func_PuChuang_6 _Receive;
+    Func_PuChuang_7 _GetReceiveNum;
+    Func_PuChuang_2 _ClearBuffer;
 
     int m_error_code;
 };
