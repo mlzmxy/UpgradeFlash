@@ -415,7 +415,7 @@ bool UpgradeProc::InitCAN()
 void UpgradeProc::WaitForUpgrade()
 {
     message->Cout("等待进入升级程序...");
-    while(true) {
+    while(1) {
         //等待底层程序发送升级命令，两次握手后结束循环
         if(CanReceiveData()) {
             if(handshake == m_can_data.at(0)) {

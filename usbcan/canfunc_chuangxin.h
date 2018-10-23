@@ -4,6 +4,8 @@
 #include <string>
 using std::string;
 
+#include <QLibrary>
+
 #include "canfunc.h"
 
 typedef DWORD (*Func_ChuangXin_1)(DWORD, DWORD, DWORD);
@@ -18,6 +20,7 @@ class CanFunc_ChuangXin : public CanFunc
 public:
     CanFunc_ChuangXin();
     ~CanFunc_ChuangXin();
+
     virtual bool OpenAndInitDevice();
     virtual bool Transmit(PCanMsg data);
     virtual unsigned long GetReceiveNum();
@@ -27,6 +30,7 @@ public:
 private:
     VCI_INIT_CONFIG init_config;  //初始化参数
     VCI_CAN_OBJ m_candata_struct;  //CAN数据结构
+    QLibrary *can_dll;
 
     Func_ChuangXin_1 _OpenDevice;
     Func_ChuangXin_2 _CloseDevice;

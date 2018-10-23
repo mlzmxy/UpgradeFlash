@@ -71,7 +71,7 @@ void MainWindow::on_upgrade_button_clicked()
     upgrade_work->setSector(UpgradeProc::AppProgram);
     upgrade_work->setOrigin_addr(0x318000);
     upgrade_work->setAddr_len(0x18000);
-
+/*
     switch (ui->comboBoxCan->currentIndex()) {
     case 0:
         upgrade_work->setCan_func(new CanFunc_ChuangXin);
@@ -80,7 +80,7 @@ void MainWindow::on_upgrade_button_clicked()
         upgrade_work->setCan_func(new CanFunc_PuChuang);
         break;
     }
-/*
+
     switch (ui->comboBox->currentIndex()) {
     case 0:
         ui->textBrowser->append("高压母线盒应用程序升级");
@@ -127,7 +127,7 @@ void MainWindow::on_upgrade_local_button_clicked()
     upgrade_work->setSector(UpgradeProc::LocalProgram);
     upgrade_work->setOrigin_addr(0x338000);
     upgrade_work->setAddr_len(0x8000);
-
+/*
     switch (ui->comboBoxCan->currentIndex()) {
     case 0:
         upgrade_work->setCan_func(new CanFunc_ChuangXin);
@@ -136,7 +136,7 @@ void MainWindow::on_upgrade_local_button_clicked()
         upgrade_work->setCan_func(new CanFunc_PuChuang);
         break;
     }
-/*
+
     switch (ui->comboBox->currentIndex()) {
     case 0:
         ui->textBrowser->append("高压母线盒底层程序升级");
