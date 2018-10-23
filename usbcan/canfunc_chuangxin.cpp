@@ -1,6 +1,9 @@
 #include "canfunc_chuangxin.h"
 
 CanFunc_ChuangXin::CanFunc_ChuangXin() :
+    m_device_type(4),
+    m_device_ind(0),
+    m_can_ind(0),
     _OpenDevice(nullptr),
     _CloseDevice(nullptr),
     _ResetCan(nullptr),
@@ -12,7 +15,7 @@ CanFunc_ChuangXin::CanFunc_ChuangXin() :
     _ClearBuffer(nullptr),
     m_error_code(0)
 {
-    //can初始化设置
+    //can初始化默认设置
     init_config.AccCode = 0x00000000;
     init_config.AccMask = 0xFFFFFFFF;
     init_config.Filter = 0;
@@ -38,9 +41,9 @@ bool CanFunc_ChuangXin::OpenAndInitDevice()
 
         if(_OpenDevice && _CloseDevice && _ResetCan && _InitCan && _Transmit
            && _Receive && _GetReceiveNum && _ClearBuffer) {
-            if(_OpenDevice(DeviceType, DeviceInd, Reserved) == 1) {
-                if(_InitCan(DeviceType, DeviceInd, CANInd, &init_config) == 1) {
-                    if(_StartCAN(DeviceType, DeviceInd, CANInd) != 1) {
+            if(_OpenDevice(m_device_type, m_device_ind, 0) == 1) {
+                if(_InitCan(m_device_type, m_device_ind, m_can_ind, &init_config) == 1) {
+                    if(_StartCAN(m_device_type, m_device_ind, m_can_ind) != 1) {
                         m_error_code = ERROR_StartCan;
                         return false;
                     }
@@ -80,7 +83,7 @@ bool CanFunc_ChuangXin::Transmit(PCanMsg data)
     m_candata_struct.Data[6] = data->data[6];
     m_candata_struct.Data[7] = data->data[7];
 
-    if(_Transmit(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1)) {
+    if(_Transmit(m_device_type, m_device_ind, m_can_ind, &m_candata_struct, 1)) {
         return true;
     } else {
         m_error_code = ERROR_SENDDATA;
@@ -90,12 +93,12 @@ bool CanFunc_ChuangXin::Transmit(PCanMsg data)
 
 unsigned long CanFunc_ChuangXin::GetReceiveNum()
 {
-    return _GetReceiveNum(DeviceType, DeviceInd, CANInd);
+    return _GetReceiveNum(m_device_type, m_device_ind, m_can_ind);
 }
 
-void CanFunc_ChuangXin::ReceiveData(PCanMsg data)
+bool CanFunc_ChuangXin::ReceiveData(PCanMsg data)
 {
-    if(_Receive(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1, 5)) {
+    if(_Receive(m_device_type, m_device_ind, m_can_ind, &m_candata_struct, 1, 5)) {
         data->id = m_candata_struct.ID;
         data->datalen = m_candata_struct.DataLen;
         data->data[0] = m_candata_struct.Data[0];
@@ -106,7 +109,9 @@ void CanFunc_ChuangXin::ReceiveData(PCanMsg data)
         data->data[5] = m_candata_struct.Data[5];
         data->data[6] = m_candata_struct.Data[6];
         data->data[7] = m_candata_struct.Data[7];
+        return true;
     }
+    return false;
 }
 
 std::string CanFunc_ChuangXin::GetErrorMsg()
@@ -136,4 +141,52 @@ std::string CanFunc_ChuangXin::GetErrorMsg()
         break;
     }
     return msg;
+}
+
+void CanFunc_ChuangXin::SetCanConfig(unsigned long dev_ind, unsigned long can_ind, TIMING timing_ind)
+{
+    m_device_ind = dev_ind;
+    m_can_ind = can_ind;
+    switch(timing_ind) {
+    case TIMING_1000K:
+        init_config.Timing0 = 0x00;
+        init_config.Timing1 = 0x14;
+        break;
+    case TIMING_800K:
+        init_config.Timing0 = 0x00;
+        init_config.Timing1 = 0x16;
+        break;
+    case TIMING_500K:
+        init_config.Timing0 = 0x00;
+        init_config.Timing1 = 0x1C;
+        break;
+    case TIMING_250K:
+        init_config.Timing0 = 0x01;
+        init_config.Timing1 = 0x1C;
+        break;
+    case TIMING_125K:
+        init_config.Timing0 = 0x03;
+        init_config.Timing1 = 0x1C;
+        break;
+    case TIMING_100K:
+        init_config.Timing0 = 0x04;
+        init_config.Timing1 = 0x1C;
+        break;
+    case TIMING_50K:
+        init_config.Timing0 = 0x09;
+        init_config.Timing1 = 0x1C;
+        break;
+    case TIMING_20K:
+        init_config.Timing0 = 0x18;
+        init_config.Timing1 = 0x1C;
+        break;
+    case TIMING_10K:
+        init_config.Timing0 = 0x31;
+        init_config.Timing1 = 0x1C;
+        break;
+    default:
+        init_config.Timing0 = 0x01;
+        init_config.Timing1 = 0x1C;
+        break;
+    }
 }

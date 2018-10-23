@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-#include "usbcan/canfunc.h"
+#include "usbcan/canfunc_chuangxin.h"
 
 namespace Ui {
 class CanForm_ChuangXin;
@@ -17,7 +17,6 @@ public:
     explicit CanForm_ChuangXin(QWidget *parent = nullptr);
     ~CanForm_ChuangXin();
 
-    CanFunc *getCan_func() const;
 
 signals:
     void ReturnOpenCanResult(CanFunc *can_func);
@@ -30,7 +29,7 @@ private slots:
 private:
     Ui::CanForm_ChuangXin *ui;
 
-    CanFunc *can_func;
+    CanFunc_ChuangXin *can_func_cx;
 };
 
 #endif // CANFORM_CHUANGXIN_H

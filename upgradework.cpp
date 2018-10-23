@@ -20,12 +20,13 @@ void UpgradeWork::run()
 {
     bool result = 0;
     UpgradeProc proc(can_func, qmsg, sector, 0x800);
+    //UpgradeProc proc(new CanFunc_ChuangXin, qmsg, sector, 0x800);
     proc.SetCanID(m_canid_cmd, m_canid_receive, m_canid_data);
     if(proc.ParseHexFile(this->file_path_name.toStdString(), origin_addr, addr_len)){
-        if(proc.InitCAN()) {
+        //if(proc.InitCAN()) {
             proc.WaitForUpgrade();
             result = proc.Process();
-        }
+        //}
     }
     emit ReturnResult(result);
 }

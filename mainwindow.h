@@ -21,8 +21,6 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void SetTextInfo(QString info);
-
 private slots:
     void on_select_button_clicked();
     void on_upgrade_button_clicked();

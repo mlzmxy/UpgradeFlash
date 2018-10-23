@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     menu_can_chuangxin = ui->menu_CAN->addAction(tr("创芯科技CANalyst-II"));
     menu_can_puchuang = ui->menu_CAN->addAction(tr("普创电子CANUSB-II"));
 
-    //ui->statusBar->addWidget(new QLabel("USBCAN:创芯科技CANalyst-II; 通道:CAN1"));//显示USBCAN设备信息
+    ui->statusBar->addWidget(new QLabel("USBCAN设备未打开"));//显示USBCAN设备信息
 
     ui->comboBox->addItem(tr("高压母线盒"));
     ui->comboBox->addItem(tr("低压母线盒"));
@@ -49,6 +49,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //can actions
     connect(menu_can_chuangxin, &QAction::triggered, this, &MainWindow::OpenCanDevice_ChuangXin);
     connect(menu_can_puchuang, &QAction::triggered, this, &MainWindow::OpenCanDevice_PuChuang);
+
+    connect(can_form_chuangxin, &CanForm_ChuangXin::ReturnOpenCanResult, this, &MainWindow::ResultOfOpenCanDevice);
 }
 
 MainWindow::~MainWindow()
@@ -58,11 +60,6 @@ MainWindow::~MainWindow()
     upgrade_work->quit();
     upgrade_work->wait();
     delete upgrade_work;
-}
-
-void MainWindow::SetTextInfo(QString info)
-{
-    ui->textBrowser->append(info);
 }
 
 void MainWindow::on_select_button_clicked()
@@ -188,7 +185,6 @@ void MainWindow::ShowResultMsg(bool result)
 
 void MainWindow::OpenCanDevice_ChuangXin()
 {
-    ui->textBrowser->append("OpenCanDevice_ChuangXin");
     can_form_chuangxin->show();
 }
 
@@ -200,10 +196,8 @@ void MainWindow::OpenCanDevice_PuChuang()
 void MainWindow::ResultOfOpenCanDevice(CanFunc *can)
 {
     if(can) {
-        ui->textBrowser->append("CAN设备打开成功");
+        ui->statusBar->addWidget(new QLabel("创芯科技CANalyst-II已打开"));//显示USBCAN设备信息
         can_func = can;
-    } else {
-        QMessageBox::warning(this, tr("错误"), tr("设备打开失败!"), QMessageBox::Cancel);
     }
 }
 

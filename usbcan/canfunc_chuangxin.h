@@ -17,12 +17,26 @@ typedef ULONG (*Func6)(DWORD, DWORD, DWORD, PVCI_CAN_OBJ, ULONG, INT);
 class CanFunc_ChuangXin : public CanFunc
 {
 public:
+    typedef enum _TIMING {
+        TIMING_1000K=0,
+        TIMING_800K,
+        TIMING_500K,
+        TIMING_250K,
+        TIMING_125K,
+        TIMING_100K,
+        TIMING_50K,
+        TIMING_20K,
+        TIMING_10K
+    }TIMING;
+public:
     CanFunc_ChuangXin();
     virtual bool OpenAndInitDevice();
     virtual bool Transmit(PCanMsg data);
     virtual unsigned long GetReceiveNum();
-    virtual void ReceiveData(PCanMsg data);
+    virtual bool ReceiveData(PCanMsg data);
     virtual string GetErrorMsg();
+
+    void SetCanConfig(unsigned long dev_ind, unsigned long can_ind, TIMING timing_ind);
 
 private:
     VCI_INIT_CONFIG init_config;  //初始化参数

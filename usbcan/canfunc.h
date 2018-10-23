@@ -17,7 +17,7 @@ public:
     virtual bool OpenAndInitDevice() = 0;
     virtual bool Transmit(PCanMsg data) = 0;
     virtual unsigned long GetReceiveNum() = 0;
-    virtual void ReceiveData(PCanMsg data) = 0;
+    virtual bool ReceiveData(PCanMsg data) = 0;
 
     virtual string GetErrorMsg() = 0;
 };

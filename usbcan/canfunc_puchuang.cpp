@@ -92,7 +92,7 @@ unsigned long CanFunc_PuChuang::GetReceiveNum()
     return _GetReceiveNum(Dev_Index, Can_Index);
 }
 
-void CanFunc_PuChuang::ReceiveData(PCanMsg data)
+bool CanFunc_PuChuang::ReceiveData(PCanMsg data)
 {
     if(_Receive(Dev_Index, Can_Index, &m_candata_struct, 1, 5)) {
         data->id = m_candata_struct.ID;
