@@ -22,37 +22,22 @@ CanFunc_ChuangXin::CanFunc_ChuangXin() :
     init_config.Timing0 = 0x01;  //250Kbps
     init_config.Timing1 = 0x1C;
     init_config.Mode = 0;
-/*
-    if(can_dll->load()) {
-        _OpenDevice = (Func_ChuangXin_1)can_dll->resolve("VCI_OpenDevice");
-        _CloseDevice = (Func_ChuangXin_2)can_dll->resolve("VCI_CloseDevice");
-        //_ResetCan = (Func_ChuangXin_1)can_dll->resolve("VCI_ResetCAN");
-        _InitCan = (Func_ChuangXin_4)can_dll->resolve("VCI_InitCAN");
-        _StartCAN = (Func_ChuangXin_1)can_dll->resolve("VCI_StartCAN");
-        _Transmit = (Func_ChuangXin_5)can_dll->resolve("VCI_Transmit");
-        _Receive = (Func_ChuangXin_6)can_dll->resolve("VCI_Receive");
-        //_GetReceiveNum = (Func_ChuangXin_3)can_dll->resolve("VCI_GetReceiveNum");
-        //_ClearBuffer = (Func_ChuangXin_1)can_dll->resolve("VCI_ClearBuffer");
 
-        DWORD rel =  _OpenDevice(DeviceType, DeviceInd, Reserved);
-        if(rel == 1) {
-            rel = _InitCan(DeviceType, DeviceInd, CANInd, &init_config);
-            if(rel == 1) {
-                rel = _StartCAN(DeviceType, DeviceInd, CANInd);
-                if(rel == 1) {
-                } else {
-                    m_error_code = ERROR_StartCan;
-                }
-            } else {
-                m_error_code = ERROR_InitCan;
-            }
-        } else {
-            m_error_code = ERROR_OPENDEVICE;
-        }
+    //加载动态链接库ControlCAN.dll
+    HMODULE hMod = LoadLibraryA("ControlCAN.dll");
+    if (hMod) {
+        _OpenDevice = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_OpenDevice");
+        _CloseDevice = (Func_ChuangXin_2)GetProcAddress(hMod, "VCI_CloseDevice");
+        _ResetCan = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_ResetCAN");
+        _InitCan = (Func_ChuangXin_4)GetProcAddress(hMod, "VCI_InitCAN");
+        _StartCAN = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_StartCAN");
+        _Transmit = (Func_ChuangXin_5)GetProcAddress(hMod, "VCI_Transmit");
+        _Receive = (Func_ChuangXin_6)GetProcAddress(hMod, "VCI_Receive");
+        _GetReceiveNum = (Func_ChuangXin_3)GetProcAddress(hMod, "VCI_GetReceiveNum");
+        _ClearBuffer = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_ClearBuffer");
     } else {
         m_error_code = ERROR_LOAD_DLL;
     }
-    */
 }
 
 CanFunc_ChuangXin::~CanFunc_ChuangXin()
@@ -62,60 +47,27 @@ CanFunc_ChuangXin::~CanFunc_ChuangXin()
 
 bool CanFunc_ChuangXin::OpenAndInitDevice()
 {
-    //加载动态链接库ControlCAN.dll
-
-
-    //HMODULE hMod = LoadLibraryA("ControlCAN.dll");
-    if(can_dll->load()) {
-        _OpenDevice = (Func_ChuangXin_1)can_dll->resolve("VCI_OpenDevice");
-        _CloseDevice = (Func_ChuangXin_2)can_dll->resolve("VCI_CloseDevice");
-        _ResetCan = (Func_ChuangXin_1)can_dll->resolve("VCI_ResetCAN");
-        _InitCan = (Func_ChuangXin_4)can_dll->resolve("VCI_InitCAN");
-        _StartCAN = (Func_ChuangXin_1)can_dll->resolve("VCI_StartCAN");
-        _Transmit = (Func_ChuangXin_5)can_dll->resolve("VCI_Transmit");
-        _Receive = (Func_ChuangXin_6)can_dll->resolve("VCI_Receive");
-        _GetReceiveNum = (Func_ChuangXin_3)can_dll->resolve("VCI_GetReceiveNum");
-        _ClearBuffer = (Func_ChuangXin_1)can_dll->resolve("VCI_ClearBuffer");
-//    if (hMod) {
-//        _OpenDevice = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_OpenDevice");
-//        _CloseDevice = (Func_ChuangXin_2)GetProcAddress(hMod, "VCI_CloseDevice");
-//        _ResetCan = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_ResetCAN");
-//        _InitCan = (Func_ChuangXin_4)GetProcAddress(hMod, "VCI_InitCAN");
-//        _StartCAN = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_StartCAN");
-//        _Transmit = (Func_ChuangXin_5)GetProcAddress(hMod, "VCI_Transmit");
-//        _Receive = (Func_ChuangXin_6)GetProcAddress(hMod, "VCI_Receive");
-//        _GetReceiveNum = (Func_ChuangXin_3)GetProcAddress(hMod, "VCI_GetReceiveNum");
-//        _ClearBuffer = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_ClearBuffer");
-
-        DWORD rel =  _OpenDevice(DeviceType, DeviceInd, Reserved);
+    DWORD rel = 0;
+    if(m_error_code == 0){
+        rel =  _OpenDevice(DeviceType, DeviceInd, Reserved);
         if(rel == 1) {
             rel = _InitCan(DeviceType, DeviceInd, CANInd, &init_config);
             if(rel == 1) {
                 rel = _StartCAN(DeviceType, DeviceInd, CANInd);
                 if(rel == 1) {
-                    //qDebug() << 1;
                     return true;
+                } else {
+                    m_error_code = ERROR_StartCan;
                 }
             } else {
                 m_error_code = ERROR_InitCan;
-                return false;
             }
         } else {
             m_error_code = ERROR_OPENDEVICE;
-            return false;
         }
-    } else {
-        m_error_code = ERROR_LOAD_DLL;
-        return false;
     }
-    m_error_code = ERROR_StartCan;
+    //qDebug() << 1;
     return false;
-
-//    if(m_error_code == 0) {
-//        return true;
-//    } else {
-//        return false;
-//    }
 }
 
 bool CanFunc_ChuangXin::Transmit(PCanMsg data)
@@ -195,4 +147,13 @@ std::string CanFunc_ChuangXin::GetErrorMsg()
         break;
     }
     return msg;
+}
+
+bool CanFunc_ChuangXin::IsSucceed()
+{
+    if(m_error_code) {
+        return false;
+    } else {
+        return true;
+    }
 }

@@ -27,6 +27,8 @@ public:
     virtual bool ReceiveData(PCanMsg data);
     virtual string GetErrorMsg();
 
+    bool IsSucceed();
+
 private:
     VCI_INIT_CONFIG init_config;  //初始化参数
     VCI_CAN_OBJ m_candata_struct;  //CAN数据结构
@@ -42,7 +44,7 @@ private:
     Func_ChuangXin_3 _GetReceiveNum;
     Func_ChuangXin_1 _ClearBuffer;
 
-    int m_error_code;
+    unsigned int m_error_code;
 };
 
 // CAN
