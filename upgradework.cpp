@@ -1,7 +1,7 @@
 #include "upgradework.h"
 
 #include "usbcan/canfunc_chuangxin.h"
-#include "usbcan/canfunc_puchuang.h"
+//#include "usbcan/canfunc_puchuang.h"
 
 UpgradeWork::UpgradeWork(QObject *parent) :
     QThread(parent),

@@ -33,9 +33,9 @@ SOURCES += \
     upgrade_ctrl/upgradeproc.cpp \
     upgradework.cpp \
     qmsginfo.cpp \
-    usbcan/canfunc_puchuang.cpp \
     usbcan/canfunc.cpp \
-    usbcan/canfunc_chuangxin.cpp
+    usbcan/canfunc_chuangxin.cpp \
+    usbcan/canfunc_puchuang.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -45,11 +45,13 @@ HEADERS += \
     upgrade_ctrl/upgradeproc.h \
     upgradework.h \
     qmsginfo.h \
-    usbcan/canfunc_puchuang.h \
     usbcan/canfunc.h \
-    usbcan/canfunc_chuangxin.h
+    usbcan/canfunc_chuangxin.h \
+    usbcan/canfunc_puchuang.h
 
 FORMS += \
         mainwindow.ui
 
 RC_ICONS = upgrade_flash.ico
+
+

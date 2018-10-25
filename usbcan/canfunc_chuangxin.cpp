@@ -1,40 +1,46 @@
+
 #include "canfunc_chuangxin.h"
 
 #include <QDebug>
 
+// CAN
+#define DeviceType 4  //设备类型 CANalyst-II
+#define DeviceInd 0   //设备索引号
+#define CANInd 0      //第0路CAN
+#define Reserved 0    //保留
+
+#define ERROR_LOAD_DLL 0x1        //DLL加载失败
+#define ERROR_LINK_DLL_FUNCS 0x2  //DLL函数链接失败
+#define ERROR_OPENDEVICE 0x3      //打开设备失败
+#define ERROR_InitCan 0x4         //CAN初始化失败
+#define ERROR_StartCan 0x5        //CAN启动失败
+#define ERROR_SENDDATA  0x6       //发送失败
+
+
 CanFunc_ChuangXin::CanFunc_ChuangXin() :
-    can_dll(new QLibrary("ControlCAN.dll")),
-    _OpenDevice(nullptr),
-    _CloseDevice(nullptr),
-    _ResetCan(nullptr),
-    _InitCan(nullptr),
-    _StartCAN(nullptr),
-    _Transmit(nullptr),
-    _Receive(nullptr),
-    _GetReceiveNum(nullptr),
-    _ClearBuffer(nullptr),
+    VCI_OpenDevice(nullptr),
+    VCI_CloseDevice(nullptr),
+    VCI_ResetCan(nullptr),
+    VCI_InitCan(nullptr),
+    VCI_StartCAN(nullptr),
+    VCI_Transmit(nullptr),
+    VCI_Receive(nullptr),
+    VCI_GetReceiveNum(nullptr),
+    VCI_ClearBuffer(nullptr),
     m_error_code(0)
 {
-    //can初始化设置
-    init_config.AccCode = 0x00000000;
-    init_config.AccMask = 0xFFFFFFFF;
-    init_config.Filter = 0;
-    init_config.Timing0 = 0x01;  //250Kbps
-    init_config.Timing1 = 0x1C;
-    init_config.Mode = 0;
-
     //加载动态链接库ControlCAN.dll
-    HMODULE hMod = LoadLibraryA("ControlCAN.dll");
+    hMod = LoadLibraryA("ControlCAN.dll");
     if (hMod) {
-        _OpenDevice = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_OpenDevice");
-        _CloseDevice = (Func_ChuangXin_2)GetProcAddress(hMod, "VCI_CloseDevice");
-        _ResetCan = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_ResetCAN");
-        _InitCan = (Func_ChuangXin_4)GetProcAddress(hMod, "VCI_InitCAN");
-        _StartCAN = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_StartCAN");
-        _Transmit = (Func_ChuangXin_5)GetProcAddress(hMod, "VCI_Transmit");
-        _Receive = (Func_ChuangXin_6)GetProcAddress(hMod, "VCI_Receive");
-        _GetReceiveNum = (Func_ChuangXin_3)GetProcAddress(hMod, "VCI_GetReceiveNum");
-        _ClearBuffer = (Func_ChuangXin_1)GetProcAddress(hMod, "VCI_ClearBuffer");
+        VCI_OpenDevice = (LPVCI_OpenDevice)GetProcAddress(hMod, "VCI_OpenDevice");
+        VCI_CloseDevice = (LPVCI_CloseDevice)GetProcAddress(hMod, "VCI_CloseDevice");
+        VCI_ResetCan = (LPVCI_ResetCAN)GetProcAddress(hMod, "VCI_ResetCAN");
+        VCI_InitCan = (LPVCI_InitCan)GetProcAddress(hMod, "VCI_InitCAN");
+        VCI_StartCAN = (LPVCI_StartCAN)GetProcAddress(hMod, "VCI_StartCAN");
+        VCI_Transmit = (LPVCI_Transmit)GetProcAddress(hMod, "VCI_Transmit");
+        VCI_Receive = (LPVCI_Receive)GetProcAddress(hMod, "VCI_Receive");
+        VCI_GetReceiveNum = (LPVCI_GetReceiveNum)GetProcAddress(hMod, "VCI_GetReceiveNum");
+        VCI_ClearBuffer = (LPVCI_ClearBuffer)GetProcAddress(hMod, "VCI_ClearBuffer");
     } else {
         m_error_code = ERROR_LOAD_DLL;
     }
@@ -42,19 +48,25 @@ CanFunc_ChuangXin::CanFunc_ChuangXin() :
 
 CanFunc_ChuangXin::~CanFunc_ChuangXin()
 {
-
+    if(VCI_CloseDevice) {
+        VCI_CloseDevice(DeviceType, DeviceInd);
+    }
 }
 
 bool CanFunc_ChuangXin::OpenAndInitDevice()
 {
-    DWORD rel = 0;
+    //can初始化设置
+    //VCI_INIT_CONFIG init_config;  //初始化参数
+    init_config.AccCode = 0x00000000;
+    init_config.AccMask = 0xFFFFFFFF;
+    init_config.Filter = 0;
+    init_config.Timing0 = 0x01;  //250Kbps
+    init_config.Timing1 = 0x1C;
+    init_config.Mode = 0;
     if(m_error_code == 0){
-        rel =  _OpenDevice(DeviceType, DeviceInd, Reserved);
-        if(rel == 1) {
-            rel = _InitCan(DeviceType, DeviceInd, CANInd, &init_config);
-            if(rel == 1) {
-                rel = _StartCAN(DeviceType, DeviceInd, CANInd);
-                if(rel == 1) {
+        if(1 == VCI_OpenDevice(DeviceType, DeviceInd, Reserved)) {
+            if(1 == VCI_InitCan(DeviceType, DeviceInd, CANInd, &init_config)) {
+                if(1 == VCI_StartCAN(DeviceType, DeviceInd, CANInd)) {
                     return true;
                 } else {
                     m_error_code = ERROR_StartCan;
@@ -66,12 +78,12 @@ bool CanFunc_ChuangXin::OpenAndInitDevice()
             m_error_code = ERROR_OPENDEVICE;
         }
     }
-    //qDebug() << 1;
     return false;
 }
 
 bool CanFunc_ChuangXin::Transmit(PCanMsg data)
 {
+    //VCI_CAN_OBJ m_candata_struct;  //CAN数据结构
     m_candata_struct.ID = data->id;
     m_candata_struct.SendType = 1;  //单次发送
     m_candata_struct.RemoteFlag = 0;
@@ -86,23 +98,27 @@ bool CanFunc_ChuangXin::Transmit(PCanMsg data)
     m_candata_struct.Data[6] = data->data[6];
     m_candata_struct.Data[7] = data->data[7];
 
-    if(_Transmit(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1)) {
-        return true;
+    if(VCI_Transmit) {
+        if(1 == VCI_Transmit(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1)) {
+            return true;
+        } else {
+            m_error_code = ERROR_SENDDATA;
+        }
     } else {
-        m_error_code = ERROR_SENDDATA;
-        return false;
+        m_error_code = ERROR_LOAD_DLL;
     }
+    return false;
 }
 
 unsigned long CanFunc_ChuangXin::GetReceiveNum()
 {
-    return _GetReceiveNum(DeviceType, DeviceInd, CANInd);
+    return VCI_GetReceiveNum(DeviceType, DeviceInd, CANInd);
 }
 
 bool CanFunc_ChuangXin::ReceiveData(PCanMsg data)
 {
-    if(_Receive) {
-        if(1 == _Receive(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1, 5)) {
+    if(VCI_Receive) {
+        if(1 == VCI_Receive(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1, 5)) {
             data->id = m_candata_struct.ID;
             data->datalen = m_candata_struct.DataLen;
             data->data[0] = m_candata_struct.Data[0];
@@ -115,8 +131,9 @@ bool CanFunc_ChuangXin::ReceiveData(PCanMsg data)
             data->data[7] = m_candata_struct.Data[7];
             return true;
         }
+    } else {
+        m_error_code = ERROR_LOAD_DLL;
     }
-    //qDebug() << "off";
     return false;
 }
 
@@ -149,11 +166,3 @@ std::string CanFunc_ChuangXin::GetErrorMsg()
     return msg;
 }
 
-bool CanFunc_ChuangXin::IsSucceed()
-{
-    if(m_error_code) {
-        return false;
-    } else {
-        return true;
-    }
-}

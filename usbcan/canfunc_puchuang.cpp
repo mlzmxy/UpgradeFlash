@@ -1,5 +1,16 @@
 #include "canfunc_puchuang.h"
 
+// CAN
+#define Dev_Index 0  //设备索引号
+#define Can_Index 0  //第0路CAN
+#define Can_Index_1 1  //第1路CAN
+
+#define ERROR_LOAD_DLL 0x1        //DLL加载失败
+#define ERROR_LINK_DLL_FUNCS 0x2  //DLL函数链接失败
+#define ERROR_OPENDEVICE 0x3      //打开设备失败
+#define ERROR_InitCan 0x4         //CAN初始化失败
+#define ERROR_SENDDATA  0x6       //发送失败
+
 CanFunc_PuChuang::CanFunc_PuChuang()
     :_OpenDevice(nullptr),
      _CloseDevice(nullptr),
@@ -11,21 +22,6 @@ CanFunc_PuChuang::CanFunc_PuChuang()
      _GetReceiveNum(nullptr),
      _ClearBuffer(nullptr),
      m_error_code(0)
-{
-    //can初始化设置
-    init_config.AccCode = 0x00000000;
-    init_config.AccMask = 0xFFFFFFFF;
-    init_config.Filter = 0;
-    init_config.Timing0 = 0x01;  //250Kbps
-    init_config.Timing1 = 0x1C;
-    init_config.Mode = 0;
-}
-
-CanFunc_PuChuang::~CanFunc_PuChuang()
-{
-}
-
-bool CanFunc_PuChuang::OpenAndInitDevice()
 {
     //加载动态链接库CAN_TO_USB.dll
     HMODULE hMod = LoadLibraryA("CAN_TO_USB.dll");
@@ -39,28 +35,40 @@ bool CanFunc_PuChuang::OpenAndInitDevice()
         _Receive = (Func_PuChuang_6)GetProcAddress(hMod, "VCI_Receive");
         _GetReceiveNum = (Func_PuChuang_7)GetProcAddress(hMod, "VCI_GetReceiveNum");
         _ClearBuffer = (Func_PuChuang_2)GetProcAddress(hMod, "VCI_ClearBuffer");
-
-        if(_OpenDevice && _CloseDevice && _ResetCan && _InitCan && _Transmit
-                && _ReadDevSn && _Receive && _GetReceiveNum && _ClearBuffer) {
-            if(_OpenDevice(Dev_Index)) {
-                if(!_InitCan(Dev_Index, Can_Index, &init_config)) {
-                    m_error_code = ERROR_InitCan;
-                    return false;
-                }
-            } else {
-                m_error_code = ERROR_OPENDEVICE;
-                return false;
-            }
-        } else {
-            m_error_code = ERROR_LINK_DLL_FUNCS;
-            return false;
-        }
-
     } else {
         m_error_code = ERROR_LOAD_DLL;
-        return false;
     }
-    return true;
+}
+
+CanFunc_PuChuang::~CanFunc_PuChuang()
+{
+    if(_CloseDevice) {
+        _CloseDevice(Dev_Index);
+    }
+}
+
+bool CanFunc_PuChuang::OpenAndInitDevice()
+{
+    //can初始化设置
+    init_config.AccCode = 0x00000000;
+    init_config.AccMask = 0xFFFFFFFF;
+    init_config.Filter = 0;
+    init_config.Timing0 = 0x01;  //250Kbps
+    init_config.Timing1 = 0x1C;
+    init_config.Mode = 0;
+
+    if(m_error_code == 0) {
+        if(_OpenDevice(Dev_Index)) {
+            if(_InitCan(Dev_Index, Can_Index, &init_config)) {
+                return true;
+            } else {
+                m_error_code = ERROR_InitCan;
+            }
+        } else {
+            m_error_code = ERROR_OPENDEVICE;
+        }
+    }
+    return false;
 }
 
 bool CanFunc_PuChuang::Transmit(PCanMsg data)
