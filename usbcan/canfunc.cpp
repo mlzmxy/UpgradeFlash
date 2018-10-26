@@ -1,6 +1,5 @@
-#include "canfunc.h"
+#include "canFunc.h"
 
 CanFunc::~CanFunc()
 {
-
 }

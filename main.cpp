@@ -1,8 +1,4 @@
 #include <QApplication>
-#include <QLibrary>
-#include <QString>
-#include <QMessageBox>
-#include <QDebug>
 
 #include "mainwindow.h"
 
