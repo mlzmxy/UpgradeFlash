@@ -507,8 +507,8 @@ bool UpgradeProc::CanSendCmdData(Flow flow)
 
 bool UpgradeProc::CanReceiveData()
 {
+    m_candata.id = m_canid_receive;
 	if (can_func->ReceiveData(&m_candata)) {
-		if ((m_canid_receive == m_candata.id) && (8 == m_candata.datalen)) {
 			m_can_data.at(0) = m_candata.data[0];
 			m_can_data.at(1) = m_candata.data[1];
 			m_can_data.at(2) = m_candata.data[2];
@@ -518,7 +518,6 @@ bool UpgradeProc::CanReceiveData()
 			m_can_data.at(6) = m_candata.data[6];
 			m_can_data.at(7) = m_candata.data[7];
 			return true;
-		}
 	}
 	return false;
 }

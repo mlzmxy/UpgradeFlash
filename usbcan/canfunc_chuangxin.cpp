@@ -84,23 +84,23 @@ bool CanFunc_ChuangXin::OpenAndInitDevice()
 
 bool CanFunc_ChuangXin::Transmit(PCanMsg data)
 {
-	//VCI_CAN_OBJ m_candata_struct;  //CAN数据结构
-	m_candata_struct.ID = data->id;
-	m_candata_struct.SendType = 1;  //单次发送
-	m_candata_struct.RemoteFlag = 0;
-	m_candata_struct.ExternFlag = 1;
-	m_candata_struct.DataLen = 8;
-	m_candata_struct.Data[0] = data->data[0];
-	m_candata_struct.Data[1] = data->data[1];
-	m_candata_struct.Data[2] = data->data[2];
-	m_candata_struct.Data[3] = data->data[3];
-	m_candata_struct.Data[4] = data->data[4];
-	m_candata_struct.Data[5] = data->data[5];
-	m_candata_struct.Data[6] = data->data[6];
-	m_candata_struct.Data[7] = data->data[7];
+    //VCI_CAN_OBJ m_candata_struct[0];  //CAN数据结构
+    m_candata_struct[0].ID = data->id;
+    m_candata_struct[0].SendType = 1;  //单次发送
+    m_candata_struct[0].RemoteFlag = 0;
+    m_candata_struct[0].ExternFlag = 1;
+    m_candata_struct[0].DataLen = 8;
+    m_candata_struct[0].Data[0] = data->data[0];
+    m_candata_struct[0].Data[1] = data->data[1];
+    m_candata_struct[0].Data[2] = data->data[2];
+    m_candata_struct[0].Data[3] = data->data[3];
+    m_candata_struct[0].Data[4] = data->data[4];
+    m_candata_struct[0].Data[5] = data->data[5];
+    m_candata_struct[0].Data[6] = data->data[6];
+    m_candata_struct[0].Data[7] = data->data[7];
 
 	if (VCI_Transmit) {
-		if (1 == VCI_Transmit(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1)) {
+        if (VCI_Transmit(DeviceType, DeviceInd, CANInd, m_candata_struct, 1)) {
 			return true;
 		}
 		else {
@@ -120,25 +120,28 @@ unsigned long CanFunc_ChuangXin::GetReceiveNum()
 
 bool CanFunc_ChuangXin::ReceiveData(PCanMsg data)
 {
-//	if (VCI_Receive) {
-    if(VCI_GetReceiveNum(DeviceType, DeviceInd, CANInd)){
-        if (VCI_Receive(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1, 5)) {
-			data->id = m_candata_struct.ID;
-			data->datalen = m_candata_struct.DataLen;
-			data->data[0] = m_candata_struct.Data[0];
-			data->data[1] = m_candata_struct.Data[1];
-			data->data[2] = m_candata_struct.Data[2];
-			data->data[3] = m_candata_struct.Data[3];
-			data->data[4] = m_candata_struct.Data[4];
-			data->data[5] = m_candata_struct.Data[5];
-			data->data[6] = m_candata_struct.Data[6];
-			data->data[7] = m_candata_struct.Data[7];
-			return true;
-		}
+    unsigned long rel = 0;
+    if (VCI_Receive) {
+        rel = VCI_Receive(DeviceType, DeviceInd, CANInd, m_candata_struct, 2500, 30);
+        for(unsigned int i = 0; i < rel; ++i) {
+            if ((m_candata_struct[i].ID == data->id) && (m_candata_struct[i].DataLen == 8)) {
+                data->id = m_candata_struct[i].ID;
+                data->datalen = m_candata_struct[i].DataLen;
+                data->data[0] = m_candata_struct[i].Data[0];
+                data->data[1] = m_candata_struct[i].Data[1];
+                data->data[2] = m_candata_struct[i].Data[2];
+                data->data[3] = m_candata_struct[i].Data[3];
+                data->data[4] = m_candata_struct[i].Data[4];
+                data->data[5] = m_candata_struct[i].Data[5];
+                data->data[6] = m_candata_struct[i].Data[6];
+                data->data[7] = m_candata_struct[i].Data[7];
+                return true;
+            }
+        }
 	}
-//	else {
-//		m_error_code = ERROR_LOAD_DLL;
-//	}
+    else {
+        m_error_code = ERROR_LOAD_DLL;
+    }
 	return false;
 }
 
@@ -168,5 +171,5 @@ std::string CanFunc_ChuangXin::GetErrorMsg()
 	default:
 		break;
 	}
-	return msg;
+    return msg;
 }

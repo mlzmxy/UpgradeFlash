@@ -7,7 +7,7 @@ using std::string;
 using std::vector;
 
 #include "hexparsing.h"
-#include "../usbcan/canfunc.h"
+#include "../usbcan/canFunc.h"
 #include "message.h"
 
 
