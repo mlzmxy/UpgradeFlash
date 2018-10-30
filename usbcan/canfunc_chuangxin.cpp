@@ -120,8 +120,9 @@ unsigned long CanFunc_ChuangXin::GetReceiveNum()
 
 bool CanFunc_ChuangXin::ReceiveData(PCanMsg data)
 {
-	if (VCI_Receive) {
-		if (1 == VCI_Receive(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1, 5)) {
+//	if (VCI_Receive) {
+    if(VCI_GetReceiveNum(DeviceType, DeviceInd, CANInd)){
+        if (VCI_Receive(DeviceType, DeviceInd, CANInd, &m_candata_struct, 1, 5)) {
 			data->id = m_candata_struct.ID;
 			data->datalen = m_candata_struct.DataLen;
 			data->data[0] = m_candata_struct.Data[0];
@@ -135,9 +136,9 @@ bool CanFunc_ChuangXin::ReceiveData(PCanMsg data)
 			return true;
 		}
 	}
-	else {
-		m_error_code = ERROR_LOAD_DLL;
-	}
+//	else {
+//		m_error_code = ERROR_LOAD_DLL;
+//	}
 	return false;
 }
 

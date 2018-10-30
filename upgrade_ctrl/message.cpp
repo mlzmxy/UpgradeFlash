@@ -10,7 +10,7 @@ void StdMessage::Cout(std::string msg)
 
 void StdMessage::ProgressValue(int progress_value)
 {
-	//std::cout << progress_value << std::endl;
+    std::cout << "烧写进度: " << progress_value << "%" << std::endl;
 }
 
 Message::~Message()

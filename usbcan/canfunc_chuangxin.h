@@ -44,7 +44,7 @@ private:
 	LPVCI_StartCAN VCI_StartCAN;
 	LPVCI_Transmit VCI_Transmit;
 	LPVCI_Receive VCI_Receive;
-	LPVCI_GetReceiveNum VCI_GetReceiveNum;
+    LPVCI_GetReceiveNum VCI_GetReceiveNum;
 	LPVCI_ClearBuffer VCI_ClearBuffer;
 
 	unsigned int m_error_code;
