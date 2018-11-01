@@ -6,6 +6,7 @@
 
 #include "upgradework.h"
 #include "qmsginfo.h"
+#include "usbcan/canfunc.h"
 
 namespace Ui {
 class MainWindow;
@@ -32,7 +33,7 @@ private:
 
     UpgradeWork* upgrade_work;
     QMsgInfo* msg;
-
+    CanFunc *can_func;
 };
 
 #endif // MAINWINDOW_H

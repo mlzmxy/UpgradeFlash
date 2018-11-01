@@ -34,7 +34,7 @@ signals:
     void ReturnResult(bool result);
 
 private:
-    UpgradeProc* upgrade_proc;
+    //UpgradeProc* upgrade_proc;
     CanFunc *can_func;
     QMsgInfo* qmsg;
     QString file_path_name;

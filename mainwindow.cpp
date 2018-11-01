@@ -18,10 +18,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     upgrade_work(new UpgradeWork),
-    msg(new QMsgInfo)
+    msg(new QMsgInfo),
+    can_func(new CanFunc_ChuangXin)
 {
     ui->setupUi(this);
-    this->setWindowTitle("UpgradeFlash for 二次配电 v0.12");
+    this->setWindowTitle("UpgradeFlash for 二次配电 v0.13");
     ui->textBrowser->setFontFamily("微软雅黑");
     ui->progressBar->setRange(0, 100);
     ui->progressBar->setValue(0);
@@ -74,13 +75,14 @@ void MainWindow::on_upgrade_button_clicked()
 
     switch (ui->comboBoxCan->currentIndex()) {
     case 0:
-        upgrade_work->setCan_func(new CanFunc_ChuangXin);
+        can_func = new CanFunc_ChuangXin;
         break;
     case 1:
-        upgrade_work->setCan_func(new CanFunc_PuChuang);
+        can_func = new CanFunc_PuChuang;
         break;
     }
-/*
+    upgrade_work->setCan_func(can_func);
+
     switch (ui->comboBox->currentIndex()) {
     case 0:
         ui->textBrowser->append("高压母线盒应用程序升级");
@@ -113,8 +115,7 @@ void MainWindow::on_upgrade_button_clicked()
     default:
         break;
     }
-*/
-    upgrade_work->SetCANID(0x01A2A3A0, 0x01A2A3A1, 0x01A2A3A4);  //测试
+
     upgrade_work->start();
 
     this->ui->select_button->setEnabled(false);
@@ -130,13 +131,14 @@ void MainWindow::on_upgrade_local_button_clicked()
 
     switch (ui->comboBoxCan->currentIndex()) {
     case 0:
-        upgrade_work->setCan_func(new CanFunc_ChuangXin);
+        can_func = new CanFunc_ChuangXin;
         break;
     case 1:
-        upgrade_work->setCan_func(new CanFunc_PuChuang);
+        can_func = new CanFunc_PuChuang;
         break;
     }
-/*
+    upgrade_work->setCan_func(can_func);
+
     switch (ui->comboBox->currentIndex()) {
     case 0:
         ui->textBrowser->append("高压母线盒底层程序升级");
@@ -169,8 +171,7 @@ void MainWindow::on_upgrade_local_button_clicked()
     default:
         break;
     }
-*/
-    upgrade_work->SetCANID(0x01A2A3A0, 0x01A2A3A1, 0x01A2A3A4);  //测试
+
     upgrade_work->start();
 
     this->ui->select_button->setEnabled(false);

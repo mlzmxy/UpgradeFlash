@@ -1,11 +1,10 @@
 #include "upgradework.h"
-
 #include "usbcan/canfunc_chuangxin.h"
-//#include "usbcan/canfunc_puchuang.h"
+#include "usbcan/canfunc_puchuang.h"
 
 UpgradeWork::UpgradeWork(QObject *parent) :
     QThread(parent),
-    upgrade_proc(new UpgradeProc),
+    //upgrade_proc(new UpgradeProc),
     can_func(new CanFunc_ChuangXin),
     qmsg(nullptr),
     file_path_name("")

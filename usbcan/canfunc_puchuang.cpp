@@ -2,8 +2,7 @@
 
 // CAN
 #define Dev_Index 0  //设备索引号
-#define Can_Index 0  //第0路CAN
-#define Can_Index_1 1  //第1路CAN
+#define Can_Index 1  //第1路CAN
 
 #define ERROR_LOAD_DLL 0x1        //DLL加载失败
 #define ERROR_LINK_DLL_FUNCS 0x2  //DLL函数链接失败
@@ -106,18 +105,20 @@ unsigned long CanFunc_PuChuang::GetReceiveNum()
 
 bool CanFunc_PuChuang::ReceiveData(PCanMsg data)
 {
-	if (_Receive(Dev_Index, Can_Index, &m_candata_struct, 1, 5)) {
-		data->id = m_candata_struct.ID;
-		data->datalen = m_candata_struct.DataLen;
-		data->data[0] = m_candata_struct.Data[0];
-		data->data[1] = m_candata_struct.Data[1];
-		data->data[2] = m_candata_struct.Data[2];
-		data->data[3] = m_candata_struct.Data[3];
-		data->data[4] = m_candata_struct.Data[4];
-		data->data[5] = m_candata_struct.Data[5];
-		data->data[6] = m_candata_struct.Data[6];
-		data->data[7] = m_candata_struct.Data[7];
-		return true;
+    if (_Receive(Dev_Index, Can_Index, &m_candata_struct, 1, 5)) {
+        if((m_candata_struct.ID == data->id) && (m_candata_struct.DataLen == 8)) {
+            data->id = m_candata_struct.ID;
+            data->datalen = m_candata_struct.DataLen;
+            data->data[0] = m_candata_struct.Data[0];
+            data->data[1] = m_candata_struct.Data[1];
+            data->data[2] = m_candata_struct.Data[2];
+            data->data[3] = m_candata_struct.Data[3];
+            data->data[4] = m_candata_struct.Data[4];
+            data->data[5] = m_candata_struct.Data[5];
+            data->data[6] = m_candata_struct.Data[6];
+            data->data[7] = m_candata_struct.Data[7];
+            return true;
+        }
 	}
 	return false;
 }
