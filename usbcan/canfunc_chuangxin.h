@@ -72,7 +72,7 @@ public:
 
 private:
     VCI_INIT_CONFIG_CX init_config;  //初始化参数
-    VCI_CAN_OBJ_CX m_candata_struct[2000];  //CAN数据结构
+    VCI_CAN_OBJ_CX m_candata_struct[500];  //CAN数据结构
 	HMODULE hMod;
 
 	LPVCI_OpenDevice VCI_OpenDevice;

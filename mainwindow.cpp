@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
     can_func(new CanFunc_ChuangXin)
 {
     ui->setupUi(this);
-    this->setWindowTitle("UpgradeFlash for 二次配电 v0.13");
+    this->setWindowTitle("UpgradeFlash for 二次配电 v0.3");
     ui->textBrowser->setFontFamily("微软雅黑");
     ui->progressBar->setRange(0, 100);
     ui->progressBar->setValue(0);

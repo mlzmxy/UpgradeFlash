@@ -86,7 +86,7 @@ bool CanFunc_ChuangXin::Transmit(PCanMsg data)
 {
     m_candata_struct[0].ID = data->id;
     m_candata_struct[0].TimeFlag = 0;
-    m_candata_struct[0].SendType = 1;  //单次发送
+    m_candata_struct[0].SendType = 0;  //正常发送，如果设置为1(单词发送)，会出现发送数据丢失
     m_candata_struct[0].RemoteFlag = 0;
     m_candata_struct[0].ExternFlag = 1;
     m_candata_struct[0].DataLen = 8;
@@ -100,8 +100,8 @@ bool CanFunc_ChuangXin::Transmit(PCanMsg data)
     m_candata_struct[0].Data[7] = data->data[7];
 
 	if (VCI_Transmit) {
+        Sleep(1);  //延时1ms
         if (1 == VCI_Transmit(DeviceType, DeviceInd, CANInd, m_candata_struct, 1)) {
-            Sleep(2);  //延时2ms
 			return true;
 		}
 		else {
@@ -124,7 +124,7 @@ bool CanFunc_ChuangXin::ReceiveData(PCanMsg data)
     unsigned long rel = 0;
     if (VCI_Receive) {
         Sleep(20); //延时20ms
-        rel = VCI_Receive(DeviceType, DeviceInd, CANInd, m_candata_struct, 2000, 0);
+        rel = VCI_Receive(DeviceType, DeviceInd, CANInd, m_candata_struct, 500, 0);
         for(unsigned int i = 0; i < rel; ++i) {
             if ((m_candata_struct[i].ID == data->id) && (m_candata_struct[i].DataLen == 8)) {
                 data->id = m_candata_struct[i].ID;

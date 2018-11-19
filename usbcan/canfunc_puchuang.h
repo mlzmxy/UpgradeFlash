@@ -54,7 +54,7 @@ public:
 
 private:
     VCI_INIT_CONFIG_PC init_config;  //初始化参数
-    VCI_CAN_OBJ_PC m_candata_struct;  //CAN数据结构
+    VCI_CAN_OBJ_PC m_candata_struct[500];  //CAN数据结构
 	HMODULE hMod;
 
 	Func_PuChuang_1 _OpenDevice;
